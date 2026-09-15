@@ -65,7 +65,15 @@ class Order:
             p = self.pages * self.rate
         return p
 
+    def __eq__(self, other):
+        if not isinstance(other, Order):
+            return NotImplemented
+        return (self.customer, self.work_type, self.pages, self.deadline) == (other.customer, other.work_type, other.pages, other.deadline)
+
     def __repr__(self):
+        return f"customer {self.customer}, work_type {self.work_type}, pages {self.pages}, deadline {self.deadline}, rate {self.rate}, status {self.status}, urgent {self.urgent}"
+
+    def __str__(self):
         return f"Заказ {self.customer}: объём {self.pages} с. оплата {self.price()} тип {self.work_type}. Выполнить работу к {self.deadline}. Статус: {self.status}"
 
 
@@ -90,40 +98,13 @@ if __name__ == "__main__":
 
 
     m = Order("Антон", "notes", 40, "2026-09-30", 60)
+    n = Order("Антон", "notes", 40, "2026-09-30", 80, status="оплачен")
+    t = Order("Андрей", "notes", 40, "2026-09-30", 80)
+    print(m == n)
+    print(m == t)
+
+    orders = [m]
+    print(n in orders)
+
     print(m)
-    # try:
-    #     a = Order(40, "notes", 40, "2026-09-30", 60)
-    # except (ValueError, TypeError) as e:
-    #     print("Не создалось: ", e)
-
-    # try:
-    #     b = Order("Антон", "new", 40, "2026-09-30", 60)
-    # except (ValueError, TypeError) as e:
-    #     print("Не создалось: ", e)
-
-    # try:
-    #     c = Order("Антон", "notes", "40", "2026-09-30", 60)
-    # except (ValueError, TypeError) as e:
-    #     print("Не создалось: ", e)
-
-    # try:
-    #     d = Order("Антон", "notes", 0, "2026-09-30", 60)
-    # except (ValueError, TypeError) as e:
-    #     print("Не создалось: ", e)
-
-    # try:
-    #     s = Order("Антон", "notes", 40, "2026-09-30", "балбла")
-    # except (ValueError, TypeError) as e:
-    #     print("Не создалось: ", e)
-
-    # try:
-    #     f = Order("", "notes", 40, "2026-09-30", 60)
-    # except (ValueError, TypeError) as e:
-    #     print("Не создалось: ", e)
-
-    # try:
-    #     m = Order("Антон", "notes", 40, "2026-09-30", 60)
-    #     print(m)
-    # except (ValueError, TypeError) as e:
-    #     print("Не создалось: ", e)
-
+    print([m])
