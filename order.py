@@ -79,43 +79,94 @@ class Order:
         return (self.customer, self.work_type, self.pages, self.deadline) == (other.customer, other.work_type, other.pages, other.deadline)
 
     def __repr__(self):
-        return f"customer {self.customer}, work_type {self.work_type}, pages {self.pages}, deadline {self.deadline}, rate {self.rate}, status {self.status}, urgent {self.urgent}"
+        return f"Order(customer='{self.customer}', work_type='{self.work_type}', pages={self.pages}, deadline='{self.deadline}', rate={self.rate}, status='{self.status}', urgent={self.urgent})"
 
     def __str__(self):
         return f"Заказ {self.customer}: объём {self.pages} с. оплата {self.price()} тип {self.work_type}. Выполнить работу к {self.deadline}. Статус: {self.status}"
 
+class OrderBook:
+
+    def __init__(self, owner):
+        self.owner = owner
+        self.orders = []
+
+    def add(self, order):
+        if not isinstance(order, Order):
+            raise TypeError('Объект должен быть заказом')
+        self.orders.append(order)
+
+    def total_revenue(self):
+        full_rate = 0
+        for order in self.orders:
+            full_rate = order.price() + full_rate
+        return full_rate
+
+    def by_status(self, status):
+        list_by_status = []
+        for order in self.orders:
+            if order.status == status:
+                list_by_status.append(order)
+        return list_by_status
+
+    def __len__(self):
+        return len(self.orders)
+        
+
+
 
 if __name__ == "__main__":
 
-    cases = [
-        (40, "notes", 40, "2026-09-30", 60),
-        ("Антон", "new", 40, "2026-09-30", 60),
-        ("Антон", "notes", "40", "2026-09-30", 60),
-        ("Антон", "notes", 0, "2026-09-30", 60),
-        ("Антон", "notes", 40, "2026-09-30", "балбла"),
-        ("  ", "notes", 40, "2026-09-30", 60)
-    ]
+    a = Order("Антон", WORK_TYPES[1], 30, "2026-03-26", 60, "old")
+    b = Order("Антон", WORK_TYPES[1], 10, "2026-03-26", 60)
+    c = Order("Андрей", WORK_TYPES[1], 30, "2026-03-26", 60)
 
-    for i in cases:
-        try:
-            a = Order(*i)
-        except (ValueError, TypeError) as e:
-            print("Не создалось: ", e)
-        else:
-            print("Ошибка проскочила!!!")
+    m = OrderBook("Глеб")
+    m.add(a)
+    m.add(b)
+    m.add(c)
+    print(m.total_revenue())
+    print(len(m))
+    print(m.by_status("new"))
+
+    try:
+        m.add('не заказ')
+    except TypeError as e:
+        print('Поймано:', e)
+
+    empty = OrderBook("Глеб")
+    print(len(empty))
+    print(empty.total_revenue())
+    print(empty.by_status("new"))
+
+    # cases = [
+    #     (40, "notes", 40, "2026-09-30", 60),
+    #     ("Антон", "new", 40, "2026-09-30", 60),
+    #     ("Антон", "notes", "40", "2026-09-30", 60),
+    #     ("Антон", "notes", 0, "2026-09-30", 60),
+    #     ("Антон", "notes", 40, "2026-09-30", "балбла"),
+    #     ("  ", "notes", 40, "2026-09-30", 60)
+    # ]
+
+    # for i in cases:
+    #     try:
+    #         a = Order(*i)
+    #     except (ValueError, TypeError) as e:
+    #         print("Не создалось: ", e)
+    #     else:
+    #         print("Ошибка проскочила!!!")
 
 
-    m = Order("Антон", "notes", 40, "2026-09-30", 60)
-    n = Order("Антон", "notes", 40, "2026-09-30", 80, status="оплачен")
-    t = Order("Андрей", "notes", 40, "2026-09-30", 80)
-    print(m == n)
-    print(m == t)
+    # m = Order("Антон", "notes", 40, "2026-09-30", 60)
+    # n = Order("Антон", "notes", 40, "2026-09-30", 80, status="оплачен")
+    # t = Order("Андрей", "notes", 40, "2026-09-30", 80)
+    # print(m == n)
+    # print(m == t)
 
-    orders = [m]
-    print(n in orders)
+    # orders = [m]
+    # print(n in orders)
 
-    print(m)
-    print([m])
+    # print(m)
+    # print([m])
 
-    print(m.to_dict())
-    print(Order.from_dict(m.to_dict()) == m)
+    # print(m.to_dict())
+    # print(Order.from_dict(m.to_dict()) == m)
