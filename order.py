@@ -65,6 +65,14 @@ class Order:
             p = self.pages * self.rate
         return p
 
+    def to_dict(self):
+        return {"customer": self.customer, "work_type": self.work_type, "pages": self.pages, "deadline": self.deadline, "rate": self.rate, "status": self.status, "urgent": self.urgent}
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(customer = data['customer'], work_type = data['work_type'], pages = data['pages'], deadline = data['deadline'], rate = data['rate'], status = data['status'], urgent = data['urgent'])
+
+
     def __eq__(self, other):
         if not isinstance(other, Order):
             return NotImplemented
@@ -108,3 +116,6 @@ if __name__ == "__main__":
 
     print(m)
     print([m])
+
+    print(m.to_dict())
+    print(Order.from_dict(m.to_dict()) == m)
