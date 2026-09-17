@@ -1,6 +1,14 @@
 import math
+from dataclasses import dataclass, field
 
 WORK_TYPES = ('notes', 'homework', 'report')
+
+@dataclass
+class Stats:
+    total_orders: int
+    total_revenue: int
+    urgent_count: int
+    by_type: dict[str, int] = field(default_factory=dict)
 
 class Order:
     def __init__(self,  customer, work_type, pages, deadline, rate, status="new", urgent=False):
@@ -108,8 +116,23 @@ class OrderBook:
                 list_by_status.append(order)
         return list_by_status
 
+    def stats(self):
+        total_orders = len(self.orders)
+        total_revenue = 0
+        urgent_count = 0
+        by_type = {}
+        for order in self.orders:
+            total_revenue += order.price()
+            if order.urgent:
+                urgent_count += 1
+            by_type[order.work_type] = by_type.get(order.work_type, 0) + 1
+        return Stats(total_orders=total_orders, total_revenue=total_revenue, urgent_count=urgent_count, by_type=by_type)
+
+
     def __len__(self):
         return len(self.orders)
+
+
         
 
 
@@ -119,11 +142,13 @@ if __name__ == "__main__":
     a = Order("Антон", WORK_TYPES[1], 30, "2026-03-26", 60, "old")
     b = Order("Антон", WORK_TYPES[1], 10, "2026-03-26", 60)
     c = Order("Андрей", WORK_TYPES[1], 30, "2026-03-26", 60)
+    h = Order("Сергей", WORK_TYPES[2], 30, "2026-03-26", 60, urgent=True)
 
     m = OrderBook("Глеб")
     m.add(a)
     m.add(b)
     m.add(c)
+    m.add(h)
     print(m.total_revenue())
     print(len(m))
     print(m.by_status("new"))
@@ -137,6 +162,10 @@ if __name__ == "__main__":
     print(len(empty))
     print(empty.total_revenue())
     print(empty.by_status("new"))
+    print(m.stats())
+    print(empty.stats())
+    print(m.stats() == m.stats())
+    print(Stats(0, 0, 0))
 
     # cases = [
     #     (40, "notes", 40, "2026-09-30", 60),
