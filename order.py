@@ -20,6 +20,10 @@ class Order:
         self.status = status
         self.urgent = urgent
 
+    @staticmethod
+    def normalize_customer(customer):
+        return customer.strip()
+        
     @property
     def customer(self):
         return self._customer
@@ -28,9 +32,10 @@ class Order:
     def customer(self, value):
         if not isinstance(value, str):
             raise TypeError("Имя должно быть текстом")
-        if value.replace(" ", "") == "":
+        cleaned_name = self.normalize_customer(value)
+        if cleaned_name == "":
             raise ValueError("Пустая строка")
-        self._customer = value
+        self._customer = cleaned_name
 
     @property
     def pages(self):
@@ -79,7 +84,6 @@ class Order:
     @classmethod
     def from_dict(cls, data):
         return cls(customer = data['customer'], work_type = data['work_type'], pages = data['pages'], deadline = data['deadline'], rate = data['rate'], status = data['status'], urgent = data['urgent'])
-
 
     def __eq__(self, other):
         if not isinstance(other, Order):
@@ -139,7 +143,7 @@ class OrderBook:
 
 if __name__ == "__main__":
 
-    a = Order("Антон", WORK_TYPES[1], 30, "2026-03-26", 60, "old")
+    a = Order("   Антон    ", WORK_TYPES[1], 30, "2026-03-26", 60, "old")
     b = Order("Антон", WORK_TYPES[1], 10, "2026-03-26", 60)
     c = Order("Андрей", WORK_TYPES[1], 30, "2026-03-26", 60)
     h = Order("Сергей", WORK_TYPES[2], 30, "2026-03-26", 60, urgent=True)
@@ -166,6 +170,18 @@ if __name__ == "__main__":
     print(empty.stats())
     print(m.stats() == m.stats())
     print(Stats(0, 0, 0))
+
+    print(Order.normalize_customer("  Антон  "))
+    print(repr(a.customer))
+    try:
+        Order("   ", WORK_TYPES[2], 30, "2029-10-20", 60)
+    except ValueError as e:
+        print("Ошибка", e)
+
+    try:
+        Order(123, WORK_TYPES[2], 30, "2029-10-20", 60)
+    except TypeError as e:
+        print("Ошибка", e)
 
     # cases = [
     #     (40, "notes", 40, "2026-09-30", 60),
