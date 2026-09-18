@@ -1,5 +1,5 @@
-from models import WORK_TYPES, Order, Stats
-from storage import OrderBook
+from orders.models import WORK_TYPES, Order, Stats
+from orders.storage import OrderBook
 
 if __name__ == "__main__":
 

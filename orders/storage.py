@@ -1,4 +1,5 @@
-from models import Order, Stats
+from orders.models import Order, Stats
+
 
 class OrderBook:
 
