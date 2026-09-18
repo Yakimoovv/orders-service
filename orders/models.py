@@ -1,6 +1,8 @@
 import math
 from dataclasses import dataclass, field
 
+from orders.exceptions import ValidationError
+
 WORK_TYPES = ('notes', 'homework', 'report')
 
 @dataclass
@@ -9,6 +11,7 @@ class Stats:
     total_revenue: int
     urgent_count: int
     by_type: dict[str, int] = field(default_factory=dict)
+
 
 class Order:
     def __init__(self,  customer, work_type, pages, deadline, rate, status="new", urgent=False):
@@ -34,7 +37,7 @@ class Order:
             raise TypeError("Имя должно быть текстом")
         cleaned_name = self.normalize_customer(value)
         if cleaned_name == "":
-            raise ValueError("Пустая строка")
+            raise ValidationError("Пустая строка")
         self._customer = cleaned_name
 
     @property
@@ -46,7 +49,7 @@ class Order:
         if not isinstance(value, int):
             raise TypeError("Кол-во страниц должно быть целым")
         if value <= 0:
-            raise ValueError("Страниц должно быть больше нуля")
+            raise ValidationError("Страниц должно быть больше нуля")
         self._pages = value
 
     @property
@@ -58,7 +61,7 @@ class Order:
         if not isinstance(value, int):
             raise TypeError("Цена должна быть числом")
         if value <= 0:
-            raise ValueError("Цена должна быть больше 0")
+            raise ValidationError("Цена должна быть больше 0")
         self._rate = value
 
     @property
@@ -68,7 +71,7 @@ class Order:
     @work_type.setter
     def work_type(self, value):
         if value not in WORK_TYPES:
-            raise ValueError("Неверный тип работы")
+            raise ValidationError("Неверный тип работы")
         self._work_type = value
 
     def price(self): 

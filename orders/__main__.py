@@ -1,3 +1,4 @@
+from orders.exceptions import OrderError, ValidationError
 from orders.models import WORK_TYPES, Order, Stats
 from orders.storage import OrderBook
 
@@ -35,10 +36,19 @@ if __name__ == "__main__":
     print(repr(a.customer))
     try:
         Order("   ", WORK_TYPES[2], 30, "2029-10-20", 60)
-    except ValueError as e:
+    except ValidationError as e:
+        print("Ошибка", e)
+
+    try:
+        Order("   ", WORK_TYPES[2], 30, "2029-10-20", 60)
+    except OrderError as e:
         print("Ошибка", e)
 
     try:
         Order(123, WORK_TYPES[2], 30, "2029-10-20", 60)
     except TypeError as e:
         print("Ошибка", e)
+
+print(issubclass(ValidationError, OrderError))
+print(issubclass(ValidationError, Exception))
+print(issubclass(OrderError, ValidationError))
