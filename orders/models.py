@@ -1,4 +1,5 @@
 import math
+
 from dataclasses import dataclass, field
 
 from orders.exceptions import ValidationError

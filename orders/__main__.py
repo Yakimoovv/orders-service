@@ -14,50 +14,12 @@ if __name__ == "__main__":
     m.add(b)
     m.add(c)
     m.add(h)
-    print(m.total_revenue())
-    print(len(m))
-    print(m.by_status("new"))
 
-    try:
-        m.add('не заказ')
-    except TypeError as e:
-        print('Поймано:', e)
+    text = m.to_json()
+    print(text)
 
-    empty = OrderBook("Глеб")
-    print(len(empty))
-    print(empty.total_revenue())
-    print(empty.by_status("new"))
-    print(m.stats())
-    print(empty.stats())
-    print(m.stats() == m.stats())
-    print(Stats(0, 0, 0))
-
-    print(Order.normalize_customer("  Антон  "))
-    print(repr(a.customer))
-    try:
-        Order("   ", WORK_TYPES[2], 30, "2029-10-20", 60)
-    except ValidationError as e:
-        print("Поле", e.field)
-        print("Текст", e)
-
-    try:
-        Order("Антоха", "new", 0, "2029-10-20", 60)
-    except ValidationError as e:
-        print("Поле", e.field)
-        print("Текст", e)
-
-    try:
-        Order("   ", WORK_TYPES[2], 30, "2029-10-20", 60)
-    except OrderError as e:
-        print("Ошибка", e)
-
-    try:
-        Order(123, WORK_TYPES[2], 30, "2029-10-20", 60)
-    except TypeError as e:
-        print("Ошибка", e)
-
-    print(issubclass(ValidationError, OrderError))
-    print(issubclass(ValidationError, Exception))
-    print(issubclass(OrderError, ValidationError))
+    restored = OrderBook.from_json(text, "Глеб")
+    print(len(restored), restored.total_revenue())
+    print(restored.orders[0] == m.orders[0])
 
 

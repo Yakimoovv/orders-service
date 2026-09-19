@@ -1,5 +1,6 @@
-from orders.models import Order, Stats
+import json
 
+from orders.models import Order, Stats
 
 class OrderBook:
 
@@ -36,6 +37,22 @@ class OrderBook:
                 urgent_count += 1
             by_type[order.work_type] = by_type.get(order.work_type, 0) + 1
         return Stats(total_orders=total_orders, total_revenue=total_revenue, urgent_count=urgent_count, by_type=by_type)
+
+    def to_json(self):
+        dict_orders = []
+        for order in self.orders:
+            dict_orders.append((order.to_dict()))
+        return json.dumps(dict_orders, ensure_ascii=False, indent=2)
+
+    @classmethod
+    def from_json(cls, text, owner):
+        dict_orders = json.loads(text)
+        book = cls(owner)
+        for order in dict_orders:
+            order_object = Order.from_dict(order)
+            book.add(order_object)
+        return book
+
 
     def __len__(self):
         return len(self.orders)
