@@ -37,7 +37,7 @@ class Order:
             raise TypeError("Имя должно быть текстом")
         cleaned_name = self.normalize_customer(value)
         if cleaned_name == "":
-            raise ValidationError("Пустая строка")
+            raise ValidationError("customer", "пустая строка")
         self._customer = cleaned_name
 
     @property
@@ -49,7 +49,7 @@ class Order:
         if not isinstance(value, int):
             raise TypeError("Кол-во страниц должно быть целым")
         if value <= 0:
-            raise ValidationError("Страниц должно быть больше нуля")
+            raise ValidationError("pages", "должно быть больше нуля")
         self._pages = value
 
     @property
@@ -61,7 +61,7 @@ class Order:
         if not isinstance(value, int):
             raise TypeError("Цена должна быть числом")
         if value <= 0:
-            raise ValidationError("Цена должна быть больше 0")
+            raise ValidationError("rate", "должен быть больше 0")
         self._rate = value
 
     @property
@@ -71,7 +71,7 @@ class Order:
     @work_type.setter
     def work_type(self, value):
         if value not in WORK_TYPES:
-            raise ValidationError("Неверный тип работы")
+            raise ValidationError("work_type", f"неверный, допустимы {WORK_TYPES}")
         self._work_type = value
 
     def price(self): 

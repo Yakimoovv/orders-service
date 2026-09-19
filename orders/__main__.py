@@ -37,7 +37,14 @@ if __name__ == "__main__":
     try:
         Order("   ", WORK_TYPES[2], 30, "2029-10-20", 60)
     except ValidationError as e:
-        print("Ошибка", e)
+        print("Поле", e.field)
+        print("Текст", e)
+
+    try:
+        Order("Антоха", "new", 0, "2029-10-20", 60)
+    except ValidationError as e:
+        print("Поле", e.field)
+        print("Текст", e)
 
     try:
         Order("   ", WORK_TYPES[2], 30, "2029-10-20", 60)
@@ -49,6 +56,8 @@ if __name__ == "__main__":
     except TypeError as e:
         print("Ошибка", e)
 
-print(issubclass(ValidationError, OrderError))
-print(issubclass(ValidationError, Exception))
-print(issubclass(OrderError, ValidationError))
+    print(issubclass(ValidationError, OrderError))
+    print(issubclass(ValidationError, Exception))
+    print(issubclass(OrderError, ValidationError))
+
+
