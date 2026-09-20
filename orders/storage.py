@@ -2,6 +2,7 @@ import json
 
 from orders.models import Order, Stats
 
+
 class OrderBook:
 
     def __init__(self, owner):
@@ -41,7 +42,7 @@ class OrderBook:
     def to_json(self):
         dict_orders = []
         for order in self.orders:
-            dict_orders.append((order.to_dict()))
+            dict_orders.append(order.to_dict())
         return json.dumps(dict_orders, ensure_ascii=False, indent=2)
 
     @classmethod
@@ -53,6 +54,17 @@ class OrderBook:
             book.add(order_object)
         return book
 
+    def save(self, path):
+        with open(path, "w", encoding="UTF-8") as f:
+            f.write(self.to_json())
+        
+
+    @classmethod
+    def load(cls, path, owner):
+        with open(path, "r", encoding="UTF-8") as f:
+            text = f.read()
+        return cls.from_json(text, owner)
+        
 
     def __len__(self):
         return len(self.orders)

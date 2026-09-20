@@ -1,5 +1,4 @@
-from orders.exceptions import OrderError, ValidationError
-from orders.models import WORK_TYPES, Order, Stats
+from orders.models import WORK_TYPES, Order
 from orders.storage import OrderBook
 
 if __name__ == "__main__":
@@ -21,5 +20,11 @@ if __name__ == "__main__":
     restored = OrderBook.from_json(text, "Глеб")
     print(len(restored), restored.total_revenue())
     print(restored.orders[0] == m.orders[0])
+
+    m.save("orders.json")
+
+    loaded = OrderBook.load("orders.json", "Глеб")
+    print(len(loaded), loaded.total_revenue())
+    print(loaded.orders[0] == m.orders[0])
 
 
