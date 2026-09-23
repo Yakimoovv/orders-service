@@ -1,6 +1,7 @@
 import json
 
 from orders.models import Order, Stats
+from orders.exceptions import StorageNotFoundError, StorageCorruptedError
 
 
 class OrderBook:
@@ -47,7 +48,10 @@ class OrderBook:
 
     @classmethod
     def from_json(cls, text, owner):
-        dict_orders = json.loads(text)
+        try:
+            dict_orders = json.loads(text)
+        except json.JSONDecodeError as e:
+            raise StorageCorruptedError("файл поврежден") from e
         book = cls(owner)
         for order in dict_orders:
             order_object = Order.from_dict(order)
@@ -61,8 +65,11 @@ class OrderBook:
 
     @classmethod
     def load(cls, path, owner):
-        with open(path, "r", encoding="UTF-8") as f:
-            text = f.read()
+        try:
+            with open(path, "r", encoding="UTF-8") as f:
+                text = f.read()
+        except FileNotFoundError as e:
+            raise StorageNotFoundError(f"файл не найден: {path}") from e
         return cls.from_json(text, owner)
         
 
