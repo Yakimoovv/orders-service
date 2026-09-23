@@ -1,7 +1,8 @@
 import json
+import os
 
+from orders.exceptions import StorageCorruptedError, StorageNotFoundError
 from orders.models import Order, Stats
-from orders.exceptions import StorageNotFoundError, StorageCorruptedError
 
 
 class OrderBook:
@@ -59,8 +60,13 @@ class OrderBook:
         return book
 
     def save(self, path):
-        with open(path, "w", encoding="UTF-8") as f:
-            f.write(self.to_json())
+        text = self.to_json()
+        tmp = path + ".tmp"
+
+        with open(tmp, "w", encoding="UTF-8") as f:
+            f.write(text)
+
+        os.replace(tmp, path)
         
 
     @classmethod

@@ -1,6 +1,5 @@
 from orders.models import WORK_TYPES, Order
 from orders.storage import OrderBook
-from orders.exceptions import StorageCorruptedError, StorageNotFoundError
 
 if __name__ == "__main__":
 
@@ -23,14 +22,4 @@ if __name__ == "__main__":
     print(restored.orders[0] == m.orders[0])
 
     m.save("orders.json")
-
-
-    try:
-        loaded = OrderBook.load("orders.json", "Глеб")
-    except StorageNotFoundError:
-        print("Файла нет - начинаю с пустого журнала")
-        loaded = OrderBook("Глеб")
-    except StorageCorruptedError as e:
-        print("Файл поврежден", e)
-        raise
 
