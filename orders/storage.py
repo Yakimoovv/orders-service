@@ -6,14 +6,13 @@ from orders.models import Order, Stats
 
 
 class OrderBook:
-
     def __init__(self, owner: str) -> None:
         self.owner = owner
-        self.orders = []
+        self.orders: list[Order] = []
 
     def add(self, order: Order) -> None:
         if not isinstance(order, Order):
-            raise TypeError('Объект должен быть заказом')
+            raise TypeError("Объект должен быть заказом")
         self.orders.append(order)
 
     def total_revenue(self) -> int:
@@ -33,13 +32,18 @@ class OrderBook:
         total_orders = len(self.orders)
         total_revenue = 0
         urgent_count = 0
-        by_type = {}
+        by_type: dict[str, int] = {}
         for order in self.orders:
             total_revenue += order.price()
             if order.urgent:
                 urgent_count += 1
             by_type[order.work_type] = by_type.get(order.work_type, 0) + 1
-        return Stats(total_orders=total_orders, total_revenue=total_revenue, urgent_count=urgent_count, by_type=by_type)
+        return Stats(
+            total_orders=total_orders,
+            total_revenue=total_revenue,
+            urgent_count=urgent_count,
+            by_type=by_type,
+        )
 
     def to_json(self) -> str:
         dict_orders = []
@@ -48,7 +52,7 @@ class OrderBook:
         return json.dumps(dict_orders, ensure_ascii=False, indent=2)
 
     @classmethod
-    def from_json(cls, text: str, owner:str) -> "OrderBook":
+    def from_json(cls, text: str, owner: str) -> "OrderBook":
         try:
             dict_orders = json.loads(text)
         except json.JSONDecodeError as e:
@@ -63,22 +67,19 @@ class OrderBook:
         text = self.to_json()
         tmp = path + ".tmp"
 
-        with open(tmp, "w", encoding="UTF-8") as f:
+        with open(tmp, "w", encoding="utf-8") as f:
             f.write(text)
 
         os.replace(tmp, path)
-        
 
     @classmethod
     def load(cls, path: str, owner: str) -> "OrderBook":
         try:
-            with open(path, "r", encoding="UTF-8") as f:
+            with open(path, "r", encoding="utf-8") as f:
                 text = f.read()
         except FileNotFoundError as e:
             raise StorageNotFoundError(f"файл не найден: {path}") from e
         return cls.from_json(text, owner)
-        
 
     def __len__(self) -> int:
         return len(self.orders)
-

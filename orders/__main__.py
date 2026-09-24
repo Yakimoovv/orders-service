@@ -1,8 +1,8 @@
+
 from orders.models import WORK_TYPES, Order
 from orders.storage import OrderBook
 
 if __name__ == "__main__":
-
     a = Order("   Антон    ", WORK_TYPES[1], 30, "2026-03-26", 60, "old")
     b = Order("Антон", WORK_TYPES[1], 10, "2026-03-26", 60)
     c = Order("Андрей", WORK_TYPES[1], 30, "2026-03-26", 60)
@@ -22,5 +22,3 @@ if __name__ == "__main__":
     print(restored.orders[0] == m.orders[0])
 
     m.save("orders.json")
-
-
