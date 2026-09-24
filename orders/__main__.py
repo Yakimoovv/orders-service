@@ -1,4 +1,3 @@
-
 from orders.models import WORK_TYPES, Order
 from orders.storage import OrderBook
 
