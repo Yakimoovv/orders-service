@@ -7,29 +7,29 @@ from orders.models import Order, Stats
 
 class OrderBook:
 
-    def __init__(self, owner):
+    def __init__(self, owner: str) -> None:
         self.owner = owner
         self.orders = []
 
-    def add(self, order):
+    def add(self, order: Order) -> None:
         if not isinstance(order, Order):
             raise TypeError('Объект должен быть заказом')
         self.orders.append(order)
 
-    def total_revenue(self):
+    def total_revenue(self) -> int:
         full_rate = 0
         for order in self.orders:
             full_rate = order.price() + full_rate
         return full_rate
 
-    def by_status(self, status):
+    def by_status(self, status: str) -> list[Order]:
         list_by_status = []
         for order in self.orders:
             if order.status == status:
                 list_by_status.append(order)
         return list_by_status
 
-    def stats(self):
+    def stats(self) -> Stats:
         total_orders = len(self.orders)
         total_revenue = 0
         urgent_count = 0
@@ -41,14 +41,14 @@ class OrderBook:
             by_type[order.work_type] = by_type.get(order.work_type, 0) + 1
         return Stats(total_orders=total_orders, total_revenue=total_revenue, urgent_count=urgent_count, by_type=by_type)
 
-    def to_json(self):
+    def to_json(self) -> str:
         dict_orders = []
         for order in self.orders:
             dict_orders.append(order.to_dict())
         return json.dumps(dict_orders, ensure_ascii=False, indent=2)
 
     @classmethod
-    def from_json(cls, text, owner):
+    def from_json(cls, text: str, owner:str) -> "OrderBook":
         try:
             dict_orders = json.loads(text)
         except json.JSONDecodeError as e:
@@ -59,7 +59,7 @@ class OrderBook:
             book.add(order_object)
         return book
 
-    def save(self, path):
+    def save(self, path: str) -> None:
         text = self.to_json()
         tmp = path + ".tmp"
 
@@ -70,7 +70,7 @@ class OrderBook:
         
 
     @classmethod
-    def load(cls, path, owner):
+    def load(cls, path: str, owner: str) -> "OrderBook":
         try:
             with open(path, "r", encoding="UTF-8") as f:
                 text = f.read()
@@ -79,6 +79,6 @@ class OrderBook:
         return cls.from_json(text, owner)
         
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.orders)
 
