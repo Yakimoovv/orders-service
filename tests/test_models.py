@@ -1,19 +1,21 @@
+import pytest
+
 from orders.models import Order
 
 
-def test_price_regular():
-    order = Order("Антон", "notes", 10, "2026-10-01", 60)
-    assert order.price() == 600
-
-
-def test_urgent_price():
-    order = Order("Антон", "notes", 10, "2026-10-01", 60, urgent=True)
-    assert order.price() == 900
-
-
-def test_float_urgent_price():
-    order = Order("Антон", "notes", 19, "2026-10-01", 59, urgent=True)
-    assert order.price() == 1682
+@pytest.mark.parametrize(
+    "pages, rate, urgent, expected",
+    [
+        (20, 30, False, 600),
+        (20, 30, True, 900),
+        (19, 59, True, 1682),
+        (1, 30, False, 30),
+        (1, 29, True, 44),
+    ],
+)
+def test_price(pages, rate, urgent, expected):
+    order = Order("Антон", "notes", pages, "2026-10-01", rate, urgent=urgent)
+    assert order.price() == expected
 
 
 def test_clean_name():

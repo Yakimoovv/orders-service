@@ -11,9 +11,10 @@ from orders.models import WORK_TYPES, Order
 from orders.storage import OrderBook
 
 
-def test_zero_pages():
+@pytest.mark.parametrize("pages", [0, -1, -100])
+def test_wrong_amount_pages(pages):
     with pytest.raises(ValidationError) as exc_info:
-        Order("Антон", WORK_TYPES[1], 0, "2026-12-20", 30)
+        Order("Антон", WORK_TYPES[1], pages, "2026-12-20", 30)
     assert exc_info.value.field == "pages"
 
 
@@ -22,9 +23,10 @@ def test_one_page():
     assert order.pages == 1
 
 
-def test_str_page():
+@pytest.mark.parametrize("pages", ["10", 1.5, None])
+def test_wrong_type_page(pages):
     with pytest.raises(TypeError):
-        Order("Антон", WORK_TYPES[1], "10", "2026-12-20", 30)
+        Order("Антон", WORK_TYPES[1], pages, "2026-12-20", 30)
 
 
 def test_space_name():
@@ -33,9 +35,10 @@ def test_space_name():
     assert exc_info.value.field == "customer"
 
 
-def test_wrong_type():
+@pytest.mark.parametrize("work_type", ["NOTES", "essay", ""])
+def test_wrong_type(work_type):
     with pytest.raises(ValidationError):
-        Order("Антон", "new", 10, "2026-12-20", 30)
+        Order("Антон", work_type, 10, "2026-12-20", 30)
 
 
 def test_zero_rate():
