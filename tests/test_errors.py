@@ -53,8 +53,7 @@ def test_zero_rate():
     assert exc_info.value.field == "rate"
 
 
-def test_wrong_pages():
-    order = Order("Антон", WORK_TYPES[1], 10, "2026-12-20", 30)
+def test_wrong_pages(order):
     with pytest.raises(ValidationError):
         order.pages = -5
 
@@ -70,7 +69,6 @@ def test_file_not_exist():
         OrderBook.load("нет_такого_файла.json", "Глеб")
 
 
-def test_not_real_order():
-    book = OrderBook("Глеб")
+def test_not_real_order(book):
     with pytest.raises(TypeError):
         book.add("Это не заказ")

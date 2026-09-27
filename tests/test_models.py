@@ -30,8 +30,7 @@ def test_working_setter():
     assert new_price == 2655
 
 
-def test_converter_dict():
-    order = Order("Антон", "notes", 19, "2026-10-01", 59, urgent=True)
-    dict_order = order.to_dict()
+def test_converter_dict(urgent_order):
+    dict_order = urgent_order.to_dict()
     order_back = Order.from_dict(dict_order)
-    assert order == order_back
+    assert dict_order == order_back.to_dict()
