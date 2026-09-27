@@ -23,7 +23,7 @@ def test_one_page():
     assert order.pages == 1
 
 
-@pytest.mark.parametrize("pages", ["10", 1.5, None])
+@pytest.mark.parametrize("pages", ["10", 1.5, None, True])
 def test_wrong_type_page(pages):
     with pytest.raises(TypeError):
         Order("Антон", WORK_TYPES[1], pages, "2026-12-20", 30)
@@ -39,6 +39,12 @@ def test_space_name():
 def test_wrong_type(work_type):
     with pytest.raises(ValidationError):
         Order("Антон", work_type, 10, "2026-12-20", 30)
+
+
+@pytest.mark.parametrize("rate", ["60", 1.5, None, True])
+def test_wrong_rate(rate):
+    with pytest.raises(TypeError):
+        Order("Антон", WORK_TYPES[1], 10, "2026-12-20", rate)
 
 
 def test_zero_rate():

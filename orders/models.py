@@ -56,8 +56,10 @@ class Order:
 
     @pages.setter
     def pages(self, value: int) -> None:
+        if isinstance(value, bool):
+            raise TypeError("Кол-во страниц должно быть целым числом")
         if not isinstance(value, int):
-            raise TypeError("Кол-во страниц должно быть целым")
+            raise TypeError("Кол-во страниц должно быть целым числом")
         if value <= 0:
             raise ValidationError("pages", "должно быть больше нуля")
         self._pages = value
@@ -68,6 +70,8 @@ class Order:
 
     @rate.setter
     def rate(self, value: int) -> None:
+        if isinstance(value, bool):
+            raise TypeError("Цена должна быть числом")
         if not isinstance(value, int):
             raise TypeError("Цена должна быть числом")
         if value <= 0:
