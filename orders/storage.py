@@ -1,5 +1,5 @@
 import json
-import os
+from pathlib import Path
 
 from orders.exceptions import StorageCorruptedError, StorageNotFoundError
 from orders.models import Order, Stats
@@ -63,20 +63,21 @@ class OrderBook:
             book.add(order_object)
         return book
 
-    def save(self, path: str) -> None:
+    def save(self, path: str | Path) -> None:
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
         text = self.to_json()
-        tmp = path + ".tmp"
 
-        with open(tmp, "w", encoding="utf-8") as f:
-            f.write(text)
+        tmp = path.with_name(path.name + ".tmp")
+        tmp.write_text(text, encoding="utf-8")
 
-        os.replace(tmp, path)
+        tmp.replace(path)
 
     @classmethod
-    def load(cls, path: str, owner: str) -> "OrderBook":
+    def load(cls, path: str | Path, owner: str) -> "OrderBook":
+        path = Path(path)
         try:
-            with open(path, "r", encoding="utf-8") as f:
-                text = f.read()
+            text = path.read_text(encoding="utf-8")
         except FileNotFoundError as e:
             raise StorageNotFoundError(f"файл не найден: {path}") from e
         return cls.from_json(text, owner)
