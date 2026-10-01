@@ -39,3 +39,27 @@ def test_stats(book_with_orders):
     assert total_revenue == 1500
     assert urgent_count == 1
     assert by_type == {"homework": 2}
+
+
+def test_save_and_load(tmp_path, book_with_orders):
+    json_file = tmp_path / "orders.json"
+    book_with_orders.save(json_file)
+    loaded_book = OrderBook.load(json_file, "Глеб")
+
+    assert len(loaded_book) == len(book_with_orders)
+    assert loaded_book.to_json() == book_with_orders.to_json()
+
+
+def test_exist_file(tmp_path, book_with_orders):
+    path = tmp_path / "a" / "b" / "orders.json"
+
+    book_with_orders.save(path)
+    assert path.exists()
+
+
+def test_tmp_file_not_exists(tmp_path, book_with_orders):
+    path = tmp_path / "a" / "b" / "orders.json"
+    book_with_orders.save(path)
+
+    path_tmp = path.with_name(path.name + ".tmp")
+    assert not path_tmp.exists()

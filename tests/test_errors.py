@@ -64,11 +64,39 @@ def test_not_json():
     assert isinstance(exc_info.value.__cause__, json.JSONDecodeError)
 
 
-def test_file_not_exist():
+def test_corrupted_json(tmp_path):
+    path = tmp_path / "orders.json"
+    path.write_text("это не json", encoding="utf-8")
+    with pytest.raises(StorageCorruptedError) as exc_info:
+        OrderBook.load(path, "Глеб")
+    assert isinstance(exc_info.value.__cause__, json.JSONDecodeError)
+
+
+def test_file_not_exist(tmp_path):
     with pytest.raises(StorageNotFoundError):
-        OrderBook.load("нет_такого_файла.json", "Глеб")
+        OrderBook.load(tmp_path / "missing.json", "Глеб")
 
 
 def test_not_real_order(book):
     with pytest.raises(TypeError):
         book.add("Это не заказ")
+
+
+def test_wrong_encoding(tmp_path):
+    path = tmp_path / "orders.json"
+    path.write_text('[{"customer": "Антон"}]', encoding="cp1251")
+    with pytest.raises(StorageCorruptedError) as exc_info:
+        OrderBook.load(path, "Глеб")
+    assert isinstance(exc_info.value.__cause__, UnicodeDecodeError)
+
+
+def test_no_field_in_order(tmp_path):
+    path = tmp_path / "orders.json"
+    path.write_text(
+        '[{"customer": "Антон","work_type": "homework","deadline": "2026-03-26","rate": 60,"status": "old","urgent": false}]',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(StorageCorruptedError) as exc_info:
+        OrderBook.load(path, "Глеб")
+    assert isinstance(exc_info.value.__cause__, KeyError)
