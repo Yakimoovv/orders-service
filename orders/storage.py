@@ -59,7 +59,10 @@ class OrderBook:
             raise StorageCorruptedError("файл поврежден") from e
         book = cls(owner)
         for order in dict_orders:
-            order_object = Order.from_dict(order)
+            try:
+                order_object = Order.from_dict(order)
+            except KeyError as e:
+                raise StorageCorruptedError("не хватает поля") from e
             book.add(order_object)
         return book
 
@@ -80,6 +83,8 @@ class OrderBook:
             text = path.read_text(encoding="utf-8")
         except FileNotFoundError as e:
             raise StorageNotFoundError(f"файл не найден: {path}") from e
+        except UnicodeDecodeError as e:
+            raise StorageCorruptedError("Неверная кодировка") from e
         return cls.from_json(text, owner)
 
     def __len__(self) -> int:
