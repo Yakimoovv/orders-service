@@ -6,15 +6,7 @@ from orders.exceptions import StorageError
 from orders.storage import OrderBook
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Показать заказы")
-    parser.add_argument(
-        "--file", type=Path, default=Path("orders.json"), help="Путь к файлу заказов"
-    )
-    parser.add_argument("--status", default=None, help="По статусу")
-    parser.add_argument("--urgent", action="store_true", help="Только срочные")
-
-    args = parser.parse_args(argv)
+def cmd_list(args) -> int:
     path = args.file
     try:
         book = OrderBook.load(path, "Глеб")
@@ -40,3 +32,21 @@ def main(argv: list[str] | None = None) -> int:
         print(order)
     print(f"Итоговая сумма {total}, всего заказов {len(orders)}")
     return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--file", type=Path, default=Path("orders.json"), help="Путь к файлу заказов"
+    )
+
+    subparsers = parser.add_subparsers(dest="command", required=True)
+    list_parser = subparsers.add_parser("list", help="Список заказов")
+    list_parser.add_argument("--status", default=None, help="По статусу")
+    list_parser.add_argument("--urgent", action="store_true", help="Только срочные")
+
+    args = parser.parse_args(argv)
+
+    if args.command == "list":
+        return cmd_list(args)
+    return 1
