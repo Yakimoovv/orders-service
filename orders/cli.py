@@ -2,7 +2,13 @@ import argparse
 import sys
 from pathlib import Path
 
-from orders.exceptions import StorageError
+from orders.exceptions import (
+    OrderError,
+    StorageCorruptedError,
+    StorageError,
+    StorageNotFoundError,
+)
+from orders.models import WORK_TYPES, Order
 from orders.storage import OrderBook
 
 
@@ -34,6 +40,33 @@ def cmd_list(args) -> int:
     return 0
 
 
+def cmd_add(args) -> int:
+    path = args.file
+    try:
+        book = OrderBook.load(path, "Глеб")
+    except StorageNotFoundError:
+        book = OrderBook("Глеб")
+    except StorageCorruptedError as e:
+        print(e, file=sys.stderr)
+        return 1
+    try:
+        order = Order(
+            args.customer,
+            args.work_type,
+            args.pages,
+            args.deadline,
+            args.rate,
+            urgent=args.urgent,
+        )
+    except OrderError as e:
+        print(e, file=sys.stderr)
+        return 1
+    book.add(order)
+    book.save(path)
+    print(f"Добавлен: {order}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -45,8 +78,18 @@ def main(argv: list[str] | None = None) -> int:
     list_parser.add_argument("--status", default=None, help="По статусу")
     list_parser.add_argument("--urgent", action="store_true", help="Только срочные")
 
+    add_parser = subparsers.add_parser("add", help="Добавить заказ")
+    add_parser.add_argument("customer")
+    add_parser.add_argument("work_type", choices=WORK_TYPES)
+    add_parser.add_argument("pages", type=int)
+    add_parser.add_argument("deadline")
+    add_parser.add_argument("rate", type=int)
+    add_parser.add_argument("--urgent", action="store_true")
+
     args = parser.parse_args(argv)
 
     if args.command == "list":
         return cmd_list(args)
+    elif args.command == "add":
+        return cmd_add(args)
     return 1
