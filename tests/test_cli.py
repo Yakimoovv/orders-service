@@ -144,3 +144,25 @@ def test_corrupted_file(tmp_path, book_with_orders):
 
     assert result == 1
     assert before == after
+
+
+def test_cmd_stats(tmp_path, book_with_orders, capsys):
+    path = tmp_path / "orders.json"
+    book_with_orders.save(path)
+    result = main(["--file", str(path), "stats"])
+    captured = capsys.readouterr()
+
+    assert result == 0
+    assert "Всего заказов: 2" in captured.out
+    assert "Выручка: 1500" in captured.out
+    assert "Срочных: 1" in captured.out
+    assert "Типы: {'homework': 2}" in captured.out
+
+
+def test_cmd_stats_file_not_exist(tmp_path, capsys):
+    path = tmp_path / "orders.json"
+    result = main(["--file", str(path), "stats"])
+    captured = capsys.readouterr()
+
+    assert result == 1
+    assert "не найден" in captured.err

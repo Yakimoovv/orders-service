@@ -67,6 +67,21 @@ def cmd_add(args) -> int:
     return 0
 
 
+def cmd_stats(args) -> int:
+    path = args.file
+    try:
+        book = OrderBook.load(path, "Глеб")
+    except StorageError as e:
+        print(e, file=sys.stderr)
+        return 1
+    stats = book.stats()
+    print(f"Всего заказов: {stats.total_orders}")
+    print(f"Выручка: {stats.total_revenue}")
+    print(f"Срочных: {stats.urgent_count}")
+    print(f"Типы: {stats.by_type}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -86,10 +101,14 @@ def main(argv: list[str] | None = None) -> int:
     add_parser.add_argument("rate", type=int)
     add_parser.add_argument("--urgent", action="store_true")
 
+    subparsers.add_parser("stats", help="Статистика по заказам")
+
     args = parser.parse_args(argv)
 
     if args.command == "list":
         return cmd_list(args)
     elif args.command == "add":
         return cmd_add(args)
+    elif args.command == "stats":
+        return cmd_stats(args)
     return 1
