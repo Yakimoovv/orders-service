@@ -12,7 +12,7 @@ from orders.models import WORK_TYPES, Order
 from orders.storage import OrderBook
 
 
-def cmd_list(args) -> int:
+def cmd_list(args: argparse.Namespace) -> int:
     path = args.file
     try:
         book = OrderBook.load(path, "Глеб")
@@ -40,7 +40,7 @@ def cmd_list(args) -> int:
     return 0
 
 
-def cmd_add(args) -> int:
+def cmd_add(args: argparse.Namespace) -> int:
     path = args.file
     try:
         book = OrderBook.load(path, "Глеб")
@@ -67,7 +67,7 @@ def cmd_add(args) -> int:
     return 0
 
 
-def cmd_stats(args) -> int:
+def cmd_stats(args: argparse.Namespace) -> int:
     path = args.file
     try:
         book = OrderBook.load(path, "Глеб")
