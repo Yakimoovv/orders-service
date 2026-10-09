@@ -1,3 +1,5 @@
+import pytest
+
 from orders.storage import OrderBook
 
 
@@ -13,6 +15,33 @@ def test_different_books_different_orders(order):
     book1.add(order)
 
     assert len(book2) == 0
+
+
+def test_outer_list(order):
+    list_orders = []
+    list_orders.append(order)
+    book = OrderBook("Антон", list_orders)
+    list_orders.append(order)
+
+    assert len(book) == 1
+
+
+def test_not_outer_change(order):
+    book = OrderBook("Антон")
+    book.orders.append(order)
+
+    assert len(book) == 0
+
+
+def test_can_not_change_orders():
+    book = OrderBook("Антон")
+    with pytest.raises(AttributeError):
+        book.orders = []
+
+
+def test_not_order_in_list():
+    with pytest.raises(TypeError):
+        OrderBook("Антон", ["fdgdfg"])
 
 
 def test_json_converter(book_with_orders):

@@ -6,34 +6,42 @@ from orders.models import Order, Stats
 
 
 class OrderBook:
-    def __init__(self, owner: str) -> None:
+    def __init__(self, owner: str, orders: list[Order] | None = None) -> None:
         self.owner = owner
-        self.orders: list[Order] = []
+        self._orders: list[Order] = []
+        if orders is not None:
+            for order in orders:
+                self.add(order)
+
+    @property
+    def orders(self) -> list[Order]:
+        copy_orders = list(self._orders)
+        return copy_orders
 
     def add(self, order: Order) -> None:
         if not isinstance(order, Order):
             raise TypeError("Объект должен быть заказом")
-        self.orders.append(order)
+        self._orders.append(order)
 
     def total_revenue(self) -> int:
         full_rate = 0
-        for order in self.orders:
+        for order in self._orders:
             full_rate = order.price() + full_rate
         return full_rate
 
     def by_status(self, status: str) -> list[Order]:
         list_by_status = []
-        for order in self.orders:
+        for order in self._orders:
             if order.status == status:
                 list_by_status.append(order)
         return list_by_status
 
     def stats(self) -> Stats:
-        total_orders = len(self.orders)
+        total_orders = len(self._orders)
         total_revenue = 0
         urgent_count = 0
         by_type: dict[str, int] = {}
-        for order in self.orders:
+        for order in self._orders:
             total_revenue += order.price()
             if order.urgent:
                 urgent_count += 1
@@ -47,7 +55,7 @@ class OrderBook:
 
     def to_json(self) -> str:
         dict_orders = []
-        for order in self.orders:
+        for order in self._orders:
             dict_orders.append(order.to_dict())
         return json.dumps(dict_orders, ensure_ascii=False, indent=2)
 
@@ -88,4 +96,4 @@ class OrderBook:
         return cls.from_json(text, owner)
 
     def __len__(self) -> int:
-        return len(self.orders)
+        return len(self._orders)
