@@ -53,6 +53,11 @@ def test_zero_rate():
     assert exc_info.value.field == "rate"
 
 
+def test_not_obj_status():
+    with pytest.raises(TypeError):
+        Order("Андрей", WORK_TYPES[1], 30, "2026-03-12", 60, status="done")
+
+
 def test_wrong_pages(order):
     with pytest.raises(ValidationError):
         order.pages = -5

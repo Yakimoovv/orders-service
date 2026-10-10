@@ -1,6 +1,6 @@
 import pytest
 
-from orders.models import Order
+from orders.models import Order, Status
 
 
 @pytest.mark.parametrize(
@@ -34,3 +34,7 @@ def test_converter_dict(urgent_order):
     dict_order = urgent_order.to_dict()
     order_back = Order.from_dict(dict_order)
     assert dict_order == order_back.to_dict()
+
+
+def test_default_status(order):
+    assert order.status is Status.NEW

@@ -1,5 +1,7 @@
 import pytest
 
+from orders.exceptions import StorageCorruptedError, ValidationError
+from orders.models import Status
 from orders.storage import OrderBook
 
 
@@ -53,9 +55,9 @@ def test_json_converter(book_with_orders):
 
 
 def test_by_status(book_with_orders):
-    book_by_status = book_with_orders.by_status("new")
+    book_by_status = book_with_orders.by_status(Status.NEW)
     assert len(book_by_status) == 1
-    assert book_by_status[0].status == "new"
+    assert book_by_status[0].status == Status.NEW
 
 
 def test_stats(book_with_orders):
@@ -92,3 +94,25 @@ def test_tmp_file_not_exists(tmp_path, book_with_orders):
 
     path_tmp = path.with_name(path.name + ".tmp")
     assert not path_tmp.exists()
+
+
+def test_wrong_status_json(tmp_path):
+    path = tmp_path / "orders.json"
+    path.write_text(
+        '[{"customer": "Антон", "work_type": "homework", "pages": 10, "deadline": "2026-03-26", "rate": 60, "status": "dnoe", "urgent": false}]',
+        encoding="utf-8",
+    )
+    with pytest.raises(StorageCorruptedError) as exc_info:
+        OrderBook.load(path, "Антон")
+    assert isinstance(exc_info.value.__cause__, ValueError)
+
+
+def test_wrong_pages_json(tmp_path):
+    path = tmp_path / "orders.json"
+    path.write_text(
+        '[{"customer": "Антон", "work_type": "homework", "pages": 0, "deadline": "2026-03-26", "rate": 60, "status": "done", "urgent": false}]',
+        encoding="utf-8",
+    )
+    with pytest.raises(StorageCorruptedError) as exc_info:
+        OrderBook.load(path, "Антон")
+    assert isinstance(exc_info.value.__cause__, ValidationError)

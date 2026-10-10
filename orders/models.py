@@ -1,5 +1,6 @@
 import math
 from dataclasses import dataclass, field
+from enum import Enum
 
 from orders.exceptions import ValidationError
 
@@ -14,6 +15,16 @@ class Stats:
     by_type: dict[str, int] = field(default_factory=dict)
 
 
+class Status(Enum):
+    NEW = "new"
+    IN_PROGRESS = "in_progress"
+    DONE = "done"
+    CANCELLED = "cancelled"
+
+    def __str__(self) -> str:
+        return self.value
+
+
 class Order:
     def __init__(
         self,
@@ -22,7 +33,7 @@ class Order:
         pages: int,
         deadline: str,
         rate: int,
-        status: str = "new",
+        status: Status = Status.NEW,
         urgent: bool = False,
     ) -> None:
         self.customer = customer
@@ -36,6 +47,16 @@ class Order:
     @staticmethod
     def normalize_customer(customer: str) -> str:
         return customer.strip()
+
+    @property
+    def status(self) -> Status:
+        return self._status
+
+    @status.setter
+    def status(self, value: Status) -> None:
+        if not isinstance(value, Status):
+            raise TypeError("Статус передан не как объект")
+        self._status = value
 
     @property
     def customer(self) -> str:
@@ -112,7 +133,7 @@ class Order:
             "pages": self.pages,
             "deadline": self.deadline,
             "rate": self.rate,
-            "status": self.status,
+            "status": self.status.value,
             "urgent": self.urgent,
         }
 
@@ -124,7 +145,7 @@ class Order:
             pages=data["pages"],
             deadline=data["deadline"],
             rate=data["rate"],
-            status=data["status"],
+            status=Status(data["status"]),
             urgent=data["urgent"],
         )
 
@@ -139,7 +160,7 @@ class Order:
         )
 
     def __repr__(self) -> str:
-        return f"Order(customer='{self.customer}', work_type='{self.work_type}', pages={self.pages}, deadline='{self.deadline}', rate={self.rate}, status='{self.status}', urgent={self.urgent})"
+        return f"Order(customer='{self.customer}', work_type='{self.work_type}', pages={self.pages}, deadline='{self.deadline}', rate={self.rate}, status='{self.status.value}', urgent={self.urgent})"
 
     def __str__(self) -> str:
-        return f"Заказ {self.customer}: объём {self.pages} с. оплата {self.price()} тип {self.work_type}. Выполнить работу к {self.deadline}. Статус: {self.status}"
+        return f"Заказ {self.customer}: объём {self.pages} с. оплата {self.price()} тип {self.work_type}. Выполнить работу к {self.deadline}. Статус: {self.status.value}"

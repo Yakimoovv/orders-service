@@ -1,8 +1,12 @@
 import json
 from pathlib import Path
 
-from orders.exceptions import StorageCorruptedError, StorageNotFoundError
-from orders.models import Order, Stats
+from orders.exceptions import (
+    StorageCorruptedError,
+    StorageNotFoundError,
+    ValidationError,
+)
+from orders.models import Order, Stats, Status
 
 
 class OrderBook:
@@ -29,7 +33,7 @@ class OrderBook:
             full_rate = order.price() + full_rate
         return full_rate
 
-    def by_status(self, status: str) -> list[Order]:
+    def by_status(self, status: Status) -> list[Order]:
         list_by_status = []
         for order in self._orders:
             if order.status == status:
@@ -71,6 +75,12 @@ class OrderBook:
                 order_object = Order.from_dict(order)
             except KeyError as e:
                 raise StorageCorruptedError("не хватает поля") from e
+            except ValueError as e:
+                raise StorageCorruptedError("неверное значение поля") from e
+            except ValidationError as e:
+                raise StorageCorruptedError("неверный формат поля") from e
+            except TypeError as e:
+                raise StorageCorruptedError("неверный тип поля") from e
             book.add(order_object)
         return book
 

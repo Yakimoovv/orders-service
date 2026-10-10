@@ -1,6 +1,7 @@
 import pytest
 
 from orders.cli import main
+from orders.models import Status
 from orders.storage import OrderBook
 
 
@@ -70,7 +71,7 @@ def test_new_order(tmp_path, book_with_orders):
     assert new_order.pages == 30
     assert new_order.deadline == "2026-10-23"
     assert new_order.rate == 40
-    assert new_order.status == "new"
+    assert new_order.status == Status.NEW
     assert new_order.urgent is True
 
 
@@ -166,3 +167,11 @@ def test_cmd_stats_file_not_exist(tmp_path, capsys):
 
     assert result == 1
     assert "не найден" in captured.err
+
+
+def test_wrong_status_in_terminal(tmp_path):
+    path = tmp_path / "orders.json"
+    with pytest.raises(SystemExit) as exc_info:
+        main(["--file", str(path), "list", "--status", "dnoe"])
+
+    assert exc_info.value.code == 2

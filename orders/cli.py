@@ -8,7 +8,7 @@ from orders.exceptions import (
     StorageError,
     StorageNotFoundError,
 )
-from orders.models import WORK_TYPES, Order
+from orders.models import WORK_TYPES, Order, Status
 from orders.storage import OrderBook
 
 
@@ -90,7 +90,9 @@ def main(argv: list[str] | None = None) -> int:
 
     subparsers = parser.add_subparsers(dest="command", required=True)
     list_parser = subparsers.add_parser("list", help="Список заказов")
-    list_parser.add_argument("--status", default=None, help="По статусу")
+    list_parser.add_argument(
+        "--status", type=Status, choices=list(Status), default=None, help="По статусу"
+    )
     list_parser.add_argument("--urgent", action="store_true", help="Только срочные")
 
     add_parser = subparsers.add_parser("add", help="Добавить заказ")

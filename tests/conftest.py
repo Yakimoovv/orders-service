@@ -1,6 +1,6 @@
 import pytest
 
-from orders.models import WORK_TYPES, Order
+from orders.models import WORK_TYPES, Order, Status
 from orders.storage import OrderBook
 
 
@@ -12,7 +12,7 @@ def order():
 @pytest.fixture
 def urgent_order():
     return Order(
-        "Андрей", WORK_TYPES[1], 20, "2026-12-20", 30, urgent=True, status="old"
+        "Андрей", WORK_TYPES[1], 20, "2026-12-20", 30, urgent=True, status=Status.DONE
     )
 
 
