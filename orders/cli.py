@@ -1,5 +1,6 @@
 import argparse
 import sys
+from datetime import date
 from pathlib import Path
 
 from orders.exceptions import (
@@ -7,6 +8,7 @@ from orders.exceptions import (
     StorageCorruptedError,
     StorageError,
     StorageNotFoundError,
+    ValidationError,
 )
 from orders.models import WORK_TYPES, Order, Status
 from orders.storage import OrderBook
@@ -50,6 +52,8 @@ def cmd_add(args: argparse.Namespace) -> int:
         print(e, file=sys.stderr)
         return 1
     try:
+        if args.deadline < date.today():
+            raise ValidationError("deadline", "дата в прошлом")
         order = Order(
             args.customer,
             args.work_type,
@@ -99,7 +103,7 @@ def main(argv: list[str] | None = None) -> int:
     add_parser.add_argument("customer")
     add_parser.add_argument("work_type", choices=WORK_TYPES)
     add_parser.add_argument("pages", type=int)
-    add_parser.add_argument("deadline")
+    add_parser.add_argument("deadline", type=date.fromisoformat)
     add_parser.add_argument("rate", type=int)
     add_parser.add_argument("--urgent", action="store_true")
 

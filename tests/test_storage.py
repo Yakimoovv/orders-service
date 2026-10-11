@@ -116,3 +116,15 @@ def test_wrong_pages_json(tmp_path):
     with pytest.raises(StorageCorruptedError) as exc_info:
         OrderBook.load(path, "Антон")
     assert isinstance(exc_info.value.__cause__, ValidationError)
+
+
+def test_wrong_deadline_in_json(tmp_path):
+    path = tmp_path / "orders.json"
+    path.write_text(
+        '[{"customer": "Антон", "work_type": "homework", "pages": 30, "deadline": "2026-03-45", "rate": 60, "status": "done", "urgent": false}]',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(StorageCorruptedError) as exc_info:
+        OrderBook.load(path, "Антон")
+    assert isinstance(exc_info.value.__cause__, ValueError)

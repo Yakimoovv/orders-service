@@ -1,5 +1,6 @@
 import math
 from dataclasses import dataclass, field
+from datetime import date
 from enum import Enum
 
 from orders.exceptions import ValidationError
@@ -31,7 +32,7 @@ class Order:
         customer: str,
         work_type: str,
         pages: int,
-        deadline: str,
+        deadline: date,
         rate: int,
         status: Status = Status.NEW,
         urgent: bool = False,
@@ -47,6 +48,16 @@ class Order:
     @staticmethod
     def normalize_customer(customer: str) -> str:
         return customer.strip()
+
+    @property
+    def deadline(self) -> date:
+        return self._deadline
+
+    @deadline.setter
+    def deadline(self, value: date) -> None:
+        if not isinstance(value, date):
+            raise TypeError("Дата не объект дата")
+        self._deadline = value
 
     @property
     def status(self) -> Status:
@@ -109,16 +120,6 @@ class Order:
             raise ValidationError("work_type", f"неверный, допустимы {WORK_TYPES}")
         self._work_type = value
 
-    @property
-    def deadline(self) -> str:
-        return self._deadline
-
-    @deadline.setter
-    def deadline(self, value: str) -> None:
-        if not isinstance(value, str):
-            raise TypeError("Дата должна быть строкой")
-        self._deadline = value
-
     def price(self) -> int:
         if self.urgent:
             p = math.ceil(self.pages * self.rate * 1.5)
@@ -126,12 +127,17 @@ class Order:
             p = self.pages * self.rate
         return p
 
+    def is_overdue(self, today: date) -> bool:
+        if self.status not in (Status.DONE, Status.CANCELLED):
+            return self.deadline < today
+        return False
+
     def to_dict(self) -> dict:
         return {
             "customer": self.customer,
             "work_type": self.work_type,
             "pages": self.pages,
-            "deadline": self.deadline,
+            "deadline": self.deadline.isoformat(),
             "rate": self.rate,
             "status": self.status.value,
             "urgent": self.urgent,
@@ -143,7 +149,7 @@ class Order:
             customer=data["customer"],
             work_type=data["work_type"],
             pages=data["pages"],
-            deadline=data["deadline"],
+            deadline=date.fromisoformat(data["deadline"]),
             rate=data["rate"],
             status=Status(data["status"]),
             urgent=data["urgent"],
@@ -163,4 +169,4 @@ class Order:
         return f"Order(customer='{self.customer}', work_type='{self.work_type}', pages={self.pages}, deadline='{self.deadline}', rate={self.rate}, status='{self.status.value}', urgent={self.urgent})"
 
     def __str__(self) -> str:
-        return f"Заказ {self.customer}: объём {self.pages} с. оплата {self.price()} тип {self.work_type}. Выполнить работу к {self.deadline}. Статус: {self.status.value}"
+        return f"Заказ {self.customer}: объём {self.pages} с. оплата {self.price()} тип {self.work_type}. Выполнить работу к {self.deadline:%d.%m.%Y}. Статус: {self.status.value}"

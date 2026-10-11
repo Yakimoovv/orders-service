@@ -1,3 +1,5 @@
+from datetime import date
+
 import pytest
 
 from orders.models import WORK_TYPES, Order, Status
@@ -6,13 +8,19 @@ from orders.storage import OrderBook
 
 @pytest.fixture
 def order():
-    return Order("Антон", WORK_TYPES[1], 20, "2026-12-20", 30)
+    return Order("Антон", WORK_TYPES[1], 20, date.fromisoformat("2099-12-20"), 30)
 
 
 @pytest.fixture
 def urgent_order():
     return Order(
-        "Андрей", WORK_TYPES[1], 20, "2026-12-20", 30, urgent=True, status=Status.DONE
+        "Андрей",
+        WORK_TYPES[1],
+        20,
+        date.fromisoformat("2099-12-20"),
+        30,
+        urgent=True,
+        status=Status.DONE,
     )
 
 

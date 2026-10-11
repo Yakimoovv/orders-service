@@ -1,4 +1,5 @@
 import json
+from datetime import date
 
 import pytest
 
@@ -14,48 +15,55 @@ from orders.storage import OrderBook
 @pytest.mark.parametrize("pages", [0, -1, -100])
 def test_wrong_amount_pages(pages):
     with pytest.raises(ValidationError) as exc_info:
-        Order("Антон", WORK_TYPES[1], pages, "2026-12-20", 30)
+        Order("Антон", WORK_TYPES[1], pages, date.fromisoformat("2026-12-20"), 30)
     assert exc_info.value.field == "pages"
 
 
 def test_one_page():
-    order = Order("Антон", WORK_TYPES[1], 1, "2026-12-20", 30)
+    order = Order("Антон", WORK_TYPES[1], 1, date.fromisoformat("2026-12-20"), 30)
     assert order.pages == 1
 
 
 @pytest.mark.parametrize("pages", ["10", 1.5, None, True])
 def test_wrong_type_page(pages):
     with pytest.raises(TypeError):
-        Order("Антон", WORK_TYPES[1], pages, "2026-12-20", 30)
+        Order("Антон", WORK_TYPES[1], pages, date.fromisoformat("2026-12-20"), 30)
 
 
 def test_space_name():
     with pytest.raises(ValidationError) as exc_info:
-        Order("   ", WORK_TYPES[1], 10, "2026-12-20", 30)
+        Order("   ", WORK_TYPES[1], 10, date.fromisoformat("2026-12-20"), 30)
     assert exc_info.value.field == "customer"
 
 
 @pytest.mark.parametrize("work_type", ["NOTES", "essay", ""])
 def test_wrong_type(work_type):
     with pytest.raises(ValidationError):
-        Order("Антон", work_type, 10, "2026-12-20", 30)
+        Order("Антон", work_type, 10, date.fromisoformat("2026-12-20"), 30)
 
 
 @pytest.mark.parametrize("rate", ["60", 1.5, None, True])
 def test_wrong_rate(rate):
     with pytest.raises(TypeError):
-        Order("Антон", WORK_TYPES[1], 10, "2026-12-20", rate)
+        Order("Антон", WORK_TYPES[1], 10, date.fromisoformat("2026-12-20"), rate)
 
 
 def test_zero_rate():
     with pytest.raises(ValidationError) as exc_info:
-        Order("Антон", WORK_TYPES[1], 10, "2026-12-20", 0)
+        Order("Антон", WORK_TYPES[1], 10, date.fromisoformat("2026-12-20"), 0)
     assert exc_info.value.field == "rate"
 
 
 def test_not_obj_status():
     with pytest.raises(TypeError):
-        Order("Андрей", WORK_TYPES[1], 30, "2026-03-12", 60, status="done")
+        Order(
+            "Андрей",
+            WORK_TYPES[1],
+            30,
+            date.fromisoformat("2026-03-12"),
+            60,
+            status="done",
+        )
 
 
 def test_wrong_pages(order):

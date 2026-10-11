@@ -1,3 +1,5 @@
+from datetime import date
+
 import pytest
 
 from orders.cli import main
@@ -56,7 +58,7 @@ def test_new_order(tmp_path, book_with_orders):
             "Боря",
             "homework",
             "30",
-            "2026-10-23",
+            "2099-10-23",
             "40",
             "--urgent",
         ]
@@ -69,7 +71,7 @@ def test_new_order(tmp_path, book_with_orders):
     assert new_order.customer == "Боря"
     assert new_order.work_type == "homework"
     assert new_order.pages == 30
-    assert new_order.deadline == "2026-10-23"
+    assert new_order.deadline == date.fromisoformat("2099-10-23")
     assert new_order.rate == 40
     assert new_order.status == Status.NEW
     assert new_order.urgent is True
@@ -175,3 +177,44 @@ def test_wrong_status_in_terminal(tmp_path):
         main(["--file", str(path), "list", "--status", "dnoe"])
 
     assert exc_info.value.code == 2
+
+
+def test_wrong_add_deadline(tmp_path):
+    path = tmp_path / "orders.json"
+    with pytest.raises(SystemExit) as exc_info:
+        main(
+            [
+                "--file",
+                str(path),
+                "add",
+                "Боря",
+                "homework",
+                "30",
+                "2026-10-45",
+                "40",
+                "--urgent",
+            ]
+        )
+
+    assert exc_info.value.code == 2
+
+
+def test_past_date(tmp_path):
+    path = tmp_path / "orders.json"
+
+    result = main(
+        [
+            "--file",
+            str(path),
+            "add",
+            "Боря",
+            "homework",
+            "30",
+            "2000-10-23",
+            "40",
+            "--urgent",
+        ]
+    )
+
+    assert result == 1
+    assert not path.exists()
