@@ -34,10 +34,7 @@ class OrderBook:
         return full_rate
 
     def by_status(self, status: Status) -> list[Order]:
-        list_by_status = []
-        for order in self._orders:
-            if order.status == status:
-                list_by_status.append(order)
+        list_by_status = [order for order in self._orders if order.status == status]
         return list_by_status
 
     def stats(self) -> Stats:

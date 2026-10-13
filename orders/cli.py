@@ -26,10 +26,7 @@ def cmd_list(args: argparse.Namespace) -> int:
     if args.status is not None:
         orders = book.by_status(args.status)
     if args.urgent:
-        urgent_book = []
-        for order in orders:
-            if order.urgent:
-                urgent_book.append(order)
+        urgent_book = [order for order in orders if order.urgent]
         orders = urgent_book
     if len(orders) == 0:
         print("Заказов нет")
