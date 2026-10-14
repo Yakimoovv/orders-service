@@ -6,3 +6,4 @@ orders.json
 .pytest_cache/
 .ruff_cache/
 *.egg-info/
+*.csv
