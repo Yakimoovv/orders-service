@@ -1,3 +1,5 @@
+import codecs
+import csv
 from datetime import date
 
 import pytest
@@ -218,3 +220,64 @@ def test_past_date(tmp_path):
 
     assert result == 1
     assert not path.exists()
+
+
+def read_csv(path):
+    with open(path, newline="", encoding="utf-8-sig") as f:
+        return list(csv.reader(f, delimiter=";"))
+
+
+def test_export(tmp_path, book_with_orders, capsys):
+    path = tmp_path / "orders.json"
+    csv_path = tmp_path / "out.csv"
+    book_with_orders.save(path)
+
+    result = main(["--file", str(path), "export", str(csv_path)])
+    captured = capsys.readouterr()
+
+    assert result == 0
+    assert "Экспортировано 2 заказов" in captured.out
+    assert csv_path.read_bytes().startswith(codecs.BOM_UTF8)
+    rows = read_csv(csv_path)
+    assert len(rows) == 3
+    assert rows[0][0] == "№"
+    assert [row[1] for row in rows[1:]] == ["Антон", "Андрей"]
+
+
+def test_export_by_status(tmp_path, book_with_orders, capsys):
+    path = tmp_path / "orders.json"
+    csv_path = tmp_path / "out.csv"
+    book_with_orders.save(path)
+
+    result = main(["--file", str(path), "export", str(csv_path), "--status", "done"])
+    captured = capsys.readouterr()
+
+    assert result == 0
+    assert "Экспортировано 1 заказов" in captured.out
+    rows = read_csv(csv_path)
+    assert [row[1] for row in rows[1:]] == ["Андрей"]
+
+
+def test_export_file_not_exist(tmp_path, capsys):
+    path = tmp_path / "orders.json"
+    csv_path = tmp_path / "out.csv"
+
+    result = main(["--file", str(path), "export", str(csv_path)])
+    captured = capsys.readouterr()
+
+    assert result == 1
+    assert "не найден" in captured.err
+    assert not csv_path.exists()
+
+
+def test_export_into_orders_file(tmp_path, book_with_orders, capsys):
+    path = tmp_path / "orders.json"
+    book_with_orders.save(path)
+    before = path.read_text(encoding="utf-8")
+
+    result = main(["--file", str(path), "export", str(path)])
+    captured = capsys.readouterr()
+
+    assert result == 1
+    assert captured.err != ""
+    assert path.read_text(encoding="utf-8") == before
