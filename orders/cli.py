@@ -1,4 +1,5 @@
 import argparse
+import csv
 import sys
 from datetime import date
 from pathlib import Path
@@ -10,6 +11,7 @@ from orders.exceptions import (
     StorageNotFoundError,
     ValidationError,
 )
+from orders.export import order_rows
 from orders.models import WORK_TYPES, Order, Status
 from orders.storage import OrderBook
 
@@ -83,6 +85,27 @@ def cmd_stats(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_export(args: argparse.Namespace) -> int:
+    path = args.file
+    if path.resolve() == args.path.resolve():
+        print("Путь к файлу json и csv одинаковые", file=sys.stderr)
+        return 1
+    try:
+        book = OrderBook.load(path, "Глеб")
+    except StorageError as e:
+        print(e, file=sys.stderr)
+        return 1
+    if args.status is not None:
+        orders = book.by_status(args.status)
+    else:
+        orders = book.orders
+    with open(args.path, "w", newline="", encoding="utf-8-sig") as f:
+        writer = csv.writer(f, delimiter=";")
+        writer.writerows(order_rows(orders))
+    print(f"Экспортировано {len(orders)} заказов")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -106,6 +129,16 @@ def main(argv: list[str] | None = None) -> int:
 
     subparsers.add_parser("stats", help="Статистика по заказам")
 
+    export_parser = subparsers.add_parser("export", help="Выгрузить заказы в таблицу")
+    export_parser.add_argument(
+        "path",
+        type=Path,
+        help="Путь к файлу с таблицей с заказами",
+    )
+    export_parser.add_argument(
+        "--status", type=Status, choices=list(Status), default=None, help="По статусу"
+    )
+
     args = parser.parse_args(argv)
 
     if args.command == "list":
@@ -114,4 +147,6 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_add(args)
     elif args.command == "stats":
         return cmd_stats(args)
+    elif args.command == "export":
+        return cmd_export(args)
     return 1
