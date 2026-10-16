@@ -118,7 +118,7 @@ def main(argv: list[str] | None = None) -> int:
         "--file", type=Path, default=Path("orders.json"), help="Путь к файлу заказов"
     )
     parser.add_argument(
-        "--verbose", action="store_true", help="Время отработки команды"
+        "--verbose", action="store_true", help="Показать время выполнения команды"
     )
 
     subparsers = parser.add_subparsers(dest="command", required=True)
