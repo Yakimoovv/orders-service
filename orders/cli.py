@@ -1,5 +1,6 @@
 import argparse
 import csv
+import logging
 import sys
 from datetime import date
 from pathlib import Path
@@ -14,8 +15,10 @@ from orders.exceptions import (
 from orders.export import order_rows
 from orders.models import WORK_TYPES, Order, Status
 from orders.storage import OrderBook
+from orders.timing import timed
 
 
+@timed
 def cmd_list(args: argparse.Namespace) -> int:
     path = args.file
     try:
@@ -41,6 +44,7 @@ def cmd_list(args: argparse.Namespace) -> int:
     return 0
 
 
+@timed
 def cmd_add(args: argparse.Namespace) -> int:
     path = args.file
     try:
@@ -70,6 +74,7 @@ def cmd_add(args: argparse.Namespace) -> int:
     return 0
 
 
+@timed
 def cmd_stats(args: argparse.Namespace) -> int:
     path = args.file
     try:
@@ -85,6 +90,7 @@ def cmd_stats(args: argparse.Namespace) -> int:
     return 0
 
 
+@timed
 def cmd_export(args: argparse.Namespace) -> int:
     path = args.file
     if path.resolve() == args.path.resolve():
@@ -110,6 +116,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--file", type=Path, default=Path("orders.json"), help="Путь к файлу заказов"
+    )
+    parser.add_argument(
+        "--verbose", action="store_true", help="Время отработки команды"
     )
 
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -140,6 +149,8 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     args = parser.parse_args(argv)
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG)
 
     if args.command == "list":
         return cmd_list(args)
