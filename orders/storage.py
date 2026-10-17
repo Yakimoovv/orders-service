@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+from orders.atomic import AtomicWriter
 from orders.exceptions import (
     StorageCorruptedError,
     StorageNotFoundError,
@@ -86,10 +87,8 @@ class OrderBook:
         path.parent.mkdir(parents=True, exist_ok=True)
         text = self.to_json()
 
-        tmp = path.with_name(path.name + ".tmp")
-        tmp.write_text(text, encoding="utf-8")
-
-        tmp.replace(path)
+        with AtomicWriter(path) as f:
+            f.write(text)
 
     @classmethod
     def load(cls, path: str | Path, owner: str) -> "OrderBook":

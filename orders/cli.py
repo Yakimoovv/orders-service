@@ -5,6 +5,7 @@ import sys
 from datetime import date
 from pathlib import Path
 
+from orders.atomic import AtomicWriter
 from orders.exceptions import (
     OrderError,
     StorageCorruptedError,
@@ -105,7 +106,7 @@ def cmd_export(args: argparse.Namespace) -> int:
         orders = book.by_status(args.status)
     else:
         orders = book.orders
-    with open(args.path, "w", newline="", encoding="utf-8-sig") as f:
+    with AtomicWriter(args.path, encoding="utf-8-sig", newline="") as f:
         writer = csv.writer(f, delimiter=";")
         writer.writerows(order_rows(orders))
     print(f"Экспортировано {len(orders)} заказов")
