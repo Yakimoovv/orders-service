@@ -2,7 +2,7 @@
 
 A command-line tool for managing orders of a pen-plotter service that writes lecture notes and homework by hand.
 
-Orders are stored in a local JSON file. The tool can add orders, list and filter them, and show statistics.
+Orders are stored in a local JSON file. The tool can add orders, list and filter them, show statistics, and export orders to a CSV table for Excel.
 
 ## Features
 
@@ -10,8 +10,10 @@ Orders are stored in a local JSON file. The tool can add orders, list and filter
 - Mark an order as urgent (price × 1.5)
 - List orders, filter by status or urgency, see the total price
 - Show statistics: number of orders, revenue, urgent orders, orders by type
+- Export orders to CSV (opens correctly in Excel, including Russian text), optionally filtered by status
+- `--verbose` mode logs how long each command took
 - Input validation with clear error messages
-- Safe saving: the data file is written atomically, and a corrupted file is never overwritten
+- Safe saving: the data file and CSV exports are written atomically, and a corrupted file is never overwritten
 
 ## Requirements
 
@@ -65,12 +67,14 @@ Use `--file` to choose another file. It goes **before** the command.
 orders add <customer> <work_type> <pages> <deadline> <rate> [--urgent]
 ```
 
+`deadline` is a date in `YYYY-MM-DD` format and can't be in the past.
+
 `work_type` is one of: `notes`, `homework`, `report`.
 
 ```bash
-orders add Anton notes 20 2026-11-01 50
-orders add Maria report 12 2026-10-20 80 --urgent
-orders --file my_orders.json add Ivan homework 8 2026-10-15 60
+orders add Anton notes 20 2027-03-01 50
+orders add Maria report 12 2027-03-10 80 --urgent
+orders --file my_orders.json add Ivan homework 8 2027-03-15 60
 ```
 
 ### List orders
@@ -94,6 +98,33 @@ Example output (the CLI output is in Russian):
 Выручка: 2920
 Срочных: 1
 Типы: {'notes': 1, 'report': 1, 'homework': 1}
+```
+
+### Export to CSV
+
+```bash
+orders export <path> [--status STATUS]
+```
+
+```bash
+orders export orders.csv                 # all orders
+orders export done.csv --status done     # only finished orders
+```
+
+The file uses `;` as the delimiter and UTF-8 with BOM, so Excel opens it with columns and correct Cyrillic text.
+Exporting into the orders file itself is refused, so the data file can't be overwritten by mistake.
+
+### Verbose mode
+
+`--verbose` goes **before** the command, like `--file`. Each command then logs its execution time to stderr:
+
+```bash
+orders --verbose list
+```
+
+```text
+...
+DEBUG:orders.timing:Функция cmd_list заняла 0.002 с
 ```
 
 ### Exit codes
@@ -135,6 +166,9 @@ orders/
   storage.py     # OrderBook: list of orders, save/load, statistics
   exceptions.py  # error hierarchy: OrderError, ValidationError, StorageError
   cli.py         # command-line interface (argparse)
+  export.py      # CSV rows generator
+  timing.py      # @timed decorator: logs command execution time
+  atomic.py      # AtomicWriter context manager: safe file writes
   __main__.py    # entry point for python -m orders
 tests/           # pytest tests
 ```
