@@ -89,7 +89,7 @@ def test_file_not_exist_create_new(tmp_path):
             "Боря",
             "homework",
             "30",
-            "2026-10-23",
+            "2099-10-23",
             "40",
             "--urgent",
         ]
@@ -111,7 +111,7 @@ def test_zero_pages(tmp_path, capsys, book_with_orders):
             "Боря",
             "homework",
             "0",
-            "2026-10-23",
+            "2099-10-23",
             "40",
             "--urgent",
         ]
@@ -139,7 +139,7 @@ def test_corrupted_file(tmp_path, book_with_orders):
             "Боря",
             "homework",
             "30",
-            "2026-10-23",
+            "2099-10-23",
             "40",
             "--urgent",
         ]
@@ -281,3 +281,15 @@ def test_export_into_orders_file(tmp_path, book_with_orders, capsys):
     assert result == 1
     assert captured.err != ""
     assert path.read_text(encoding="utf-8") == before
+
+
+def test_different_status(tmp_path, book_with_orders, capsys):
+    path = tmp_path / "orders.json"
+    book_with_orders.save(path)
+
+    result = main(["--file", str(path), "list", "--status", "done"])
+    captured = capsys.readouterr()
+
+    assert result == 0
+    assert "Андрей" in captured.out
+    assert "Антон" not in captured.out
