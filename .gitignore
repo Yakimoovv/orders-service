@@ -7,3 +7,5 @@ orders.json
 .ruff_cache/
 *.egg-info/
 *.csv
+.coverage
+htmlcov/
