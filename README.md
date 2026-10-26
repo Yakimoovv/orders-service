@@ -1,6 +1,6 @@
 # orders-service
 
-A command-line tool for managing orders of a pen-plotter service that writes handwritten lecture notes and homework
+A command-line tool for managing orders of a pen-plotter service that writes handwritten lecture notes and homework. Built with Python 3.13, tested with pytest, typed with mypy.
 
 Orders are stored in a local JSON file. The tool can add orders, list and filter them, show statistics, and export orders to a CSV table for Excel.
 
