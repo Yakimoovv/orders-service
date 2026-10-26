@@ -158,6 +158,8 @@ ruff check .
 ruff format --check .
 ```
 
+Run all checks at once: `ruff check . ; mypy orders ; pytest`
+
 ## Project structure
 
 ```text
