@@ -5,7 +5,7 @@ from datetime import date
 import pytest
 
 from orders.cli import main
-from orders.models import Status
+from orders.models import WORK_TYPES, Order, Status
 from orders.storage import OrderBook
 
 
@@ -293,3 +293,21 @@ def test_different_status(tmp_path, book_with_orders, capsys):
     assert result == 0
     assert "Андрей" in captured.out
     assert "Антон" not in captured.out
+
+
+def test_overdue_orders(tmp_path, capsys):
+    path = tmp_path / "orders.json"
+    order1 = Order("Антон", WORK_TYPES[1], 30, date(2000, 1, 1), 20, status=Status.NEW)
+    order2 = Order(
+        "Андрей", WORK_TYPES[1], 30, date(2000, 1, 1), 20, status=Status.DONE
+    )
+    order3 = Order("Сергей", WORK_TYPES[1], 30, date(2099, 12, 20), 20)
+    book = OrderBook("Глеб", [order1, order2, order3])
+    book.save(path)
+
+    result = main(["--file", str(path), "list", "--overdue"])
+    captured = capsys.readouterr()
+
+    assert result == 0
+    assert "Антон" in captured.out
+    assert ("Андрей" not in captured.out) and ("Сергей" not in captured.out)
