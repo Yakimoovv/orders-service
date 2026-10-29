@@ -8,7 +8,7 @@ Orders are stored in a local JSON file that is always written atomically. The to
 
 - Add an order: customer, work type, number of pages, deadline, rate per page
 - Mark an order as urgent (price × 1.5)
-- List orders, filter by status or urgency, see the total price
+- List orders, filter by status, urgency or overdue deadline, see the total price
 - Show statistics: number of orders, revenue, urgent orders, orders by type
 - Export orders to CSV (opens correctly in Excel, including Russian text), optionally filtered by status
 - `--verbose` mode logs how long each command took
@@ -83,6 +83,7 @@ orders --file my_orders.json add Ivan homework 8 2027-03-15 60
 orders list                  # all orders
 orders list --status new     # only orders with status "new"
 orders list --urgent         # only urgent orders
+orders list --overdue        # only overdue orders (deadline passed, not done/cancelled)
 ```
 
 ### Show statistics
