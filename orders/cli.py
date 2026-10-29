@@ -34,6 +34,9 @@ def cmd_list(args: argparse.Namespace) -> int:
     if args.urgent:
         urgent_book = [order for order in orders if order.urgent]
         orders = urgent_book
+    if args.overdue:
+        today = date.today()
+        orders = [order for order in orders if order.is_overdue(today)]
     if len(orders) == 0:
         print("Заказов нет")
         return 0
@@ -128,6 +131,9 @@ def main(argv: list[str] | None = None) -> int:
         "--status", type=Status, choices=list(Status), default=None, help="По статусу"
     )
     list_parser.add_argument("--urgent", action="store_true", help="Только срочные")
+    list_parser.add_argument(
+        "--overdue", action="store_true", help="Только просроченные"
+    )
 
     add_parser = subparsers.add_parser("add", help="Добавить заказ")
     add_parser.add_argument("customer")
