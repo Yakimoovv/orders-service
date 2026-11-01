@@ -159,7 +159,11 @@ ruff check .
 ruff format --check .
 ```
 
-Run all checks at once: `ruff check . ; mypy orders ; pytest`
+Run all checks at once (stops at the first failure):
+
+```bash
+./scripts/check.sh
+```
 
 ## Project structure
 
@@ -174,4 +178,6 @@ orders/
   atomic.py      # AtomicWriter context manager: safe file writes
   __main__.py    # entry point for python -m orders
 tests/           # pytest tests
+scripts/
+  check.sh       # runs ruff, mypy and pytest in one go
 ```
