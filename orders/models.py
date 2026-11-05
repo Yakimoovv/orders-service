@@ -36,6 +36,7 @@ class Order:
         rate: int,
         status: Status = Status.NEW,
         urgent: bool = False,
+        id: int | None = None,
     ) -> None:
         self.customer = customer
         self.work_type = work_type
@@ -44,6 +45,7 @@ class Order:
         self.deadline = deadline
         self.status = status
         self.urgent = urgent
+        self.id = id
 
     @staticmethod
     def normalize_customer(customer: str) -> str:
@@ -166,7 +168,7 @@ class Order:
         )
 
     def __repr__(self) -> str:
-        return f"Order(customer='{self.customer}', work_type='{self.work_type}', pages={self.pages}, deadline='{self.deadline}', rate={self.rate}, status='{self.status.value}', urgent={self.urgent})"
+        return f"Order(customer='{self.customer}', work_type='{self.work_type}', pages={self.pages}, deadline='{self.deadline}', rate={self.rate}, status='{self.status.value}', urgent={self.urgent}, id={self.id})"
 
     def __str__(self) -> str:
         return f"Заказ {self.customer}: объём {self.pages} с. оплата {self.price()} тип {self.work_type}. Выполнить работу к {self.deadline:%d.%m.%Y}. Статус: {self.status.value}"
