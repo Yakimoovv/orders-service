@@ -8,29 +8,33 @@ from pathlib import Path
 from orders.atomic import AtomicWriter
 from orders.exceptions import (
     OrderError,
-    StorageCorruptedError,
     StorageError,
     StorageNotFoundError,
     ValidationError,
 )
 from orders.export import order_rows
 from orders.models import WORK_TYPES, Order, Status
+from orders.repository import SqliteOrderRepository
 from orders.storage import OrderBook
 from orders.timing import timed
+
+
+def _open_repo(path: Path, must_exist: bool) -> SqliteOrderRepository:
+    if must_exist and not path.exists():
+        raise StorageNotFoundError(f"Файл не найден: {path}")
+    return SqliteOrderRepository(path)
 
 
 @timed
 def cmd_list(args: argparse.Namespace) -> int:
     path = args.file
     try:
-        book = OrderBook.load(path, "Глеб")
+        with _open_repo(path, must_exist=True) as repo:
+            orders = repo.list(args.status)
     except StorageError as e:
         print(e, file=sys.stderr)
         return 1
 
-    orders = book.orders
-    if args.status is not None:
-        orders = book.by_status(args.status)
     if args.urgent:
         urgent_book = [order for order in orders if order.urgent]
         orders = urgent_book
@@ -52,13 +56,6 @@ def cmd_list(args: argparse.Namespace) -> int:
 def cmd_add(args: argparse.Namespace) -> int:
     path = args.file
     try:
-        book = OrderBook.load(path, "Глеб")
-    except StorageNotFoundError:
-        book = OrderBook("Глеб")
-    except StorageCorruptedError as e:
-        print(e, file=sys.stderr)
-        return 1
-    try:
         if args.deadline < date.today():
             raise ValidationError("deadline", "дата в прошлом")
         order = Order(
@@ -72,9 +69,14 @@ def cmd_add(args: argparse.Namespace) -> int:
     except OrderError as e:
         print(e, file=sys.stderr)
         return 1
-    book.add(order)
-    book.save(path)
-    print(f"Добавлен: {order}")
+
+    try:
+        with _open_repo(path, must_exist=False) as repo:
+            order_id = repo.add(order)
+    except StorageError as e:
+        print(e, file=sys.stderr)
+        return 1
+    print(f"Добавлен заказ №{order_id}: {order}")
     return 0
 
 
@@ -82,10 +84,12 @@ def cmd_add(args: argparse.Namespace) -> int:
 def cmd_stats(args: argparse.Namespace) -> int:
     path = args.file
     try:
-        book = OrderBook.load(path, "Глеб")
+        with _open_repo(path, must_exist=True) as repo:
+            orders = repo.list()
     except StorageError as e:
         print(e, file=sys.stderr)
         return 1
+    book = OrderBook("Глеб", orders)
     stats = book.stats()
     print(f"Всего заказов: {stats.total_orders}")
     print(f"Выручка: {stats.total_revenue}")
@@ -98,17 +102,14 @@ def cmd_stats(args: argparse.Namespace) -> int:
 def cmd_export(args: argparse.Namespace) -> int:
     path = args.file
     if path.resolve() == args.path.resolve():
-        print("Путь к файлу json и csv одинаковые", file=sys.stderr)
+        print("Путь к файлу базы данных и csv одинаковые", file=sys.stderr)
         return 1
     try:
-        book = OrderBook.load(path, "Глеб")
+        with _open_repo(path, must_exist=True) as repo:
+            orders = repo.list(args.status)
     except StorageError as e:
         print(e, file=sys.stderr)
         return 1
-    if args.status is not None:
-        orders = book.by_status(args.status)
-    else:
-        orders = book.orders
     with AtomicWriter(args.path, encoding="utf-8-sig", newline="") as f:
         writer = csv.writer(f, delimiter=";")
         writer.writerows(order_rows(orders))
@@ -119,7 +120,7 @@ def cmd_export(args: argparse.Namespace) -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--file", type=Path, default=Path("orders.json"), help="Путь к файлу заказов"
+        "--file", type=Path, default=Path("orders.db"), help="Путь к файлу заказов"
     )
     parser.add_argument(
         "--verbose", action="store_true", help="Показать время выполнения команды"

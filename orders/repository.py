@@ -1,16 +1,24 @@
 import sqlite3
 from datetime import date
 from pathlib import Path
+from types import TracebackType
 
-from orders.exceptions import StorageError
+from orders.exceptions import StorageCorruptedError, StorageError
 from orders.models import Order, Status
 
 
 class SqliteOrderRepository:
     def __init__(self, path: str | Path) -> None:
-        self._conn = sqlite3.connect(path)
-        self._conn.row_factory = sqlite3.Row
-        self._create_table()
+        try:
+            self._conn = sqlite3.connect(path)
+        except sqlite3.DatabaseError as e:
+            raise StorageError(f"Не удалось открыть базу: {path}") from e
+        try:
+            self._conn.row_factory = sqlite3.Row
+            self._create_table()
+        except sqlite3.DatabaseError as e:
+            self._conn.close()
+            raise StorageCorruptedError(f"Файл не является базой данных: {path}") from e
 
     def _create_table(self) -> None:
         self._conn.execute("""
@@ -77,5 +85,28 @@ class SqliteOrderRepository:
             list_orders.append(self._row_to_order(row))
         return list_orders
 
+    def set_status(self, order_id: int, status: Status) -> bool:
+        with self._conn:
+            cur = self._conn.execute(
+                "UPDATE orders SET status = ? WHERE id = ?", (status.value, order_id)
+            )
+        return bool(cur.rowcount)
+
+    def delete(self, order_id: int) -> bool:
+        with self._conn:
+            cur = self._conn.execute("DELETE FROM orders WHERE id = ?", (order_id,))
+        return bool(cur.rowcount)
+
     def close(self) -> None:
         self._conn.close()
+
+    def __enter__(self) -> "SqliteOrderRepository":
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        self.close()

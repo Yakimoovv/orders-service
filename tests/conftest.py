@@ -3,6 +3,7 @@ from datetime import date
 import pytest
 
 from orders.models import WORK_TYPES, Order, Status
+from orders.repository import SqliteOrderRepository
 from orders.storage import OrderBook
 
 
@@ -34,3 +35,12 @@ def book_with_orders(book, order, urgent_order):
     book.add(order)
     book.add(urgent_order)
     return book
+
+
+@pytest.fixture
+def db_with_orders(tmp_path, order, urgent_order):
+    path = tmp_path / "orders.db"
+    with SqliteOrderRepository(path) as repo:
+        repo.add(order)
+        repo.add(urgent_order)
+    return path

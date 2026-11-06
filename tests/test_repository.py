@@ -23,3 +23,26 @@ def test_different_status(tmp_path, order, urgent_order):
     assert list_orders[0].customer == "Андрей"
     assert list_orders[0].status == Status.DONE
     assert len(list_orders) == 1
+
+
+def test_set_status(tmp_path, order):
+    path = tmp_path / "orders.db"
+    repo = SqliteOrderRepository(path)
+    order_id = repo.add(order)
+
+    assert repo.set_status(order_id, Status.DONE) is True
+    assert repo.get(order_id).status == Status.DONE
+    assert repo.set_status(999, Status.DONE) is False
+
+
+def test_delete_and_with(tmp_path, order):
+    path = tmp_path / "orders.db"
+    with SqliteOrderRepository(path) as repo:
+        order_id = repo.add(order)
+        delete_code = repo.delete(order_id)
+        get_unexist_order = repo.get(order_id)
+        repeat_delete_code = repo.delete(order_id)
+
+    assert delete_code is True
+    assert get_unexist_order is None
+    assert repeat_delete_code is False
