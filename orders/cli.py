@@ -117,6 +117,59 @@ def cmd_export(args: argparse.Namespace) -> int:
     return 0
 
 
+@timed
+def cmd_status(args: argparse.Namespace) -> int:
+    path = args.file
+    try:
+        with _open_repo(path, must_exist=True) as repo:
+            found = repo.set_status(args.id, args.new_status)
+    except StorageError as e:
+        print(e, file=sys.stderr)
+        return 1
+    if not found:
+        print(f"Заказ №{args.id} не найден", file=sys.stderr)
+        return 1
+    print(f"Заказ №{args.id}: статус {args.new_status}")
+    return 0
+
+
+@timed
+def cmd_delete(args: argparse.Namespace) -> int:
+    path = args.file
+    try:
+        with _open_repo(path, must_exist=True) as repo:
+            deleted = repo.delete(args.id)
+    except StorageError as e:
+        print(e, file=sys.stderr)
+        return 1
+    if not deleted:
+        print(f"Заказ №{args.id} не найден", file=sys.stderr)
+        return 1
+    print(f"Заказ №{args.id} удален")
+    return 0
+
+
+@timed
+def cmd_migrate(args: argparse.Namespace) -> int:
+    path = args.file
+    try:
+        book = OrderBook.load(args.json_path, "Глеб")
+    except StorageError as e:
+        print(e, file=sys.stderr)
+        return 1
+    try:
+        with _open_repo(path, must_exist=False) as repo:
+            if len(repo.list()) != 0:
+                print("База не пуста, перенос отменен", file=sys.stderr)
+                return 1
+            repo.add_many(book.orders)
+    except StorageError as e:
+        print(e, file=sys.stderr)
+        return 1
+    print(f"Перенесено {len(book.orders)} заказов")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -135,6 +188,18 @@ def main(argv: list[str] | None = None) -> int:
     list_parser.add_argument(
         "--overdue", action="store_true", help="Только просроченные"
     )
+
+    status_parser = subparsers.add_parser("status", help="Изменить статус заказа")
+    status_parser.add_argument("id", type=int)
+    status_parser.add_argument("new_status", type=Status, choices=list(Status))
+
+    delete_parser = subparsers.add_parser("delete", help="Удалить заказ")
+    delete_parser.add_argument("id", type=int)
+
+    migrate_parser = subparsers.add_parser(
+        "migrate", help="Перенести заказы из JSON в базу данных"
+    )
+    migrate_parser.add_argument("json_path", type=Path)
 
     add_parser = subparsers.add_parser("add", help="Добавить заказ")
     add_parser.add_argument("customer")
@@ -168,4 +233,10 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_stats(args)
     elif args.command == "export":
         return cmd_export(args)
+    elif args.command == "status":
+        return cmd_status(args)
+    elif args.command == "delete":
+        return cmd_delete(args)
+    elif args.command == "migrate":
+        return cmd_migrate(args)
     return 1

@@ -35,22 +35,13 @@ class SqliteOrderRepository:
 
     def add(self, order: Order) -> int:
         with self._conn:
-            add_order = self._conn.execute(
-                "INSERT INTO orders (customer, work_type, pages, deadline, rate, status, urgent) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (
-                    order.customer,
-                    order.work_type,
-                    order.pages,
-                    order.deadline.isoformat(),
-                    order.rate,
-                    order.status.value,
-                    int(order.urgent),
-                ),
-            )
-            if add_order.lastrowid is None:
-                raise StorageError("Нет ID для нового заказа в SQLite")
-        order.id = add_order.lastrowid
-        return add_order.lastrowid
+            order_id = self._insert(order)
+        return order_id
+
+    def add_many(self, orders: list[Order]) -> None:
+        with self._conn:
+            for order in orders:
+                self._insert(order)
 
     def get(self, order_id: int) -> Order | None:
         row = self._conn.execute(
@@ -96,6 +87,24 @@ class SqliteOrderRepository:
         with self._conn:
             cur = self._conn.execute("DELETE FROM orders WHERE id = ?", (order_id,))
         return bool(cur.rowcount)
+
+    def _insert(self, order: Order) -> int:
+        add_order = self._conn.execute(
+            "INSERT INTO orders (customer, work_type, pages, deadline, rate, status, urgent) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (
+                order.customer,
+                order.work_type,
+                order.pages,
+                order.deadline.isoformat(),
+                order.rate,
+                order.status.value,
+                int(order.urgent),
+            ),
+        )
+        if add_order.lastrowid is None:
+            raise StorageError("Нет ID для нового заказа в SQLite")
+        order.id = add_order.lastrowid
+        return add_order.lastrowid
 
     def close(self) -> None:
         self._conn.close()

@@ -304,3 +304,58 @@ def test_overdue_orders(tmp_path, capsys):
     assert result == 0
     assert "Антон" in captured.out
     assert ("Андрей" not in captured.out) and ("Сергей" not in captured.out)
+
+
+def test_status(db_with_orders, capsys):
+    path = db_with_orders
+    result = main(["--file", str(path), "status", "1", "done"])
+    captured = capsys.readouterr()
+
+    with SqliteOrderRepository(path) as repo:
+        order = repo.get(1)
+
+    assert result == 0
+    assert "статус done" in captured.out
+    assert order.status == Status.DONE
+
+
+def test_status_not_found(db_with_orders, capsys):
+    path = db_with_orders
+    result = main(["--file", str(path), "status", "999", "done"])
+    captured = capsys.readouterr()
+
+    assert result == 1
+    assert "не найден" in captured.err
+
+
+def test_delete(db_with_orders, capsys):
+    path = db_with_orders
+    first = main(["--file", str(path), "delete", "1"])
+    second = main(["--file", str(path), "delete", "1"])
+    captured = capsys.readouterr()
+
+    with SqliteOrderRepository(path) as repo:
+        orders = repo.list()
+
+    assert first == 0
+    assert second == 1
+    assert "не найден" in captured.err
+    assert len(orders) == 1
+
+
+def test_migrate_twice(tmp_path, book_with_orders, capsys):
+    json_path = tmp_path / "orders.json"
+    db_path = tmp_path / "orders.db"
+    book_with_orders.save(json_path)
+
+    first = main(["--file", str(db_path), "migrate", str(json_path)])
+    second = main(["--file", str(db_path), "migrate", str(json_path)])
+    captured = capsys.readouterr()
+
+    with SqliteOrderRepository(db_path) as repo:
+        orders = repo.list()
+
+    assert first == 0
+    assert second == 1
+    assert "не пуста" in captured.err
+    assert len(orders) == 2

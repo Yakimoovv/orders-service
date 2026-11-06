@@ -1,3 +1,7 @@
+import sqlite3
+
+import pytest
+
 from orders.models import Status
 from orders.repository import SqliteOrderRepository
 
@@ -46,3 +50,14 @@ def test_delete_and_with(tmp_path, order):
     assert delete_code is True
     assert get_unexist_order is None
     assert repeat_delete_code is False
+
+
+def test_add_many_rollback(tmp_path, order, urgent_order):
+    path = tmp_path / "orders.db"
+    urgent_order._pages = 0
+
+    with SqliteOrderRepository(path) as repo:
+        with pytest.raises(sqlite3.IntegrityError):
+            repo.add_many([order, urgent_order])
+
+        assert repo.list() == []
