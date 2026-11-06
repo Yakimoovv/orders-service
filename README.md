@@ -2,18 +2,20 @@
 
 A command-line tool for managing orders of a pen-plotter service that writes handwritten lecture notes and homework. Built with Python 3.13, tested with pytest, typed with mypy.
 
-Orders are stored in a local JSON file that is always written atomically. The tool can add orders, list and filter them by status or urgency, show statistics, and export orders to a CSV table for Excel.
+Orders are stored in a local SQLite database. The tool can add orders, change their status, delete them, list and filter them, show statistics, export orders to a CSV table for Excel, and migrate old orders from a JSON file.
 
 ## Features
 
-- Add an order: customer, work type, number of pages, deadline, rate per page
+- Add an order: customer, work type, number of pages, deadline, rate per page; each order gets a unique number
+- Change an order's status or delete an order by its number
 - Mark an order as urgent (price × 1.5)
 - List orders, filter by status, urgency or overdue deadline, see the total price
 - Show statistics: number of orders, revenue, urgent orders, orders by type
 - Export orders to CSV (opens correctly in Excel, including Russian text), optionally filtered by status
+- Migrate orders from the old JSON format into the database in one transaction: all or nothing
 - `--verbose` mode logs how long each command took
 - Input validation with clear error messages
-- Safe saving: the data file and CSV exports are written atomically, and a corrupted file is never overwritten
+- Safe storage: every change is a database transaction, CSV exports are written atomically, and a file that isn't a database is never overwritten
 
 ## Requirements
 
@@ -58,8 +60,10 @@ orders --help
 
 ## Usage
 
-By default, orders are stored in `orders.json` in the current folder.
+By default, orders are stored in the SQLite database `orders.db` in the current folder.
 Use `--file` to choose another file. It goes **before** the command.
+
+`add` and `migrate` create the database if it doesn't exist yet. All other commands require an existing database, so a typo in `--file` gives a "file not found" error instead of silently creating an empty database.
 
 ### Add an order
 
@@ -71,10 +75,12 @@ orders add <customer> <work_type> <pages> <deadline> <rate> [--urgent]
 
 `work_type` is one of: `notes`, `homework`, `report`.
 
+The command prints the number of the new order, for example `Добавлен заказ №3: ...`. Use this number with `status` and `delete`.
+
 ```bash
 orders add Anton notes 20 2027-03-01 50
 orders add Maria report 12 2027-03-10 80 --urgent
-orders --file my_orders.json add Ivan homework 8 2027-03-15 60
+orders --file my_orders.db add Ivan homework 8 2027-03-15 60
 ```
 
 ### List orders
@@ -85,6 +91,30 @@ orders list --status new     # only orders with status "new"
 orders list --urgent         # only urgent orders
 orders list --overdue        # only overdue orders (deadline passed, not done/cancelled)
 ```
+
+### Change status
+
+```bash
+orders status <id> <new_status>
+```
+
+`new_status` is one of: `new`, `in_progress`, `done`, `cancelled`.
+
+```bash
+orders status 3 done
+```
+
+### Delete an order
+
+```bash
+orders delete <id>
+```
+
+```bash
+orders delete 3
+```
+
+If there is no order with this number, both commands print an error and exit with code 1.
 
 ### Show statistics
 
@@ -113,7 +143,19 @@ orders export done.csv --status done     # only finished orders
 ```
 
 The file uses `;` as the delimiter and UTF-8 with BOM, so Excel opens it with columns and correct Cyrillic text.
-Exporting into the orders file itself is refused, so the data file can't be overwritten by mistake.
+The `№` column contains the order number from the database.
+Exporting into the orders file itself is refused, so the database can't be overwritten by mistake.
+
+### Migrate from JSON
+
+Earlier versions stored orders in a JSON file. To move them into the database:
+
+```bash
+orders migrate orders.json
+```
+
+All orders are added in a single transaction: if any of them fails, none are added.
+Migration is refused if the database already contains orders, so running it twice can't create duplicates.
 
 ### Verbose mode
 
@@ -133,7 +175,7 @@ DEBUG:orders.timing:Функция cmd_list заняла 0.002 с
 | Code | Meaning |
 | --- | --- |
 | 0 | Success |
-| 1 | Data error (file not found, corrupted file, invalid order) |
+| 1 | Data error (file not found, not a database, invalid order, order not found, migration into a non-empty database) |
 | 2 | Invalid command-line arguments |
 
 Errors are printed to stderr.
@@ -169,8 +211,9 @@ Run all checks at once (stops at the first failure):
 
 ```text
 orders/
-  models.py      # Order class: validation, price, JSON conversion
-  storage.py     # OrderBook: list of orders, save/load, statistics
+  models.py      # Order class: validation, price, dict conversion
+  repository.py  # SqliteOrderRepository: orders table, add/get/list/set_status/delete, transactions
+  storage.py     # OrderBook: statistics; JSON load/save used by migrate
   exceptions.py  # error hierarchy: OrderError, ValidationError, StorageError
   cli.py         # command-line interface (argparse)
   export.py      # CSV rows generator
