@@ -15,9 +15,9 @@ def order_rows(orders: list[Order]) -> Iterator[list[str]]:
         "urgent",
         "price",
     ]
-    for i, order in enumerate(orders, start=1):
+    for order in orders:
         yield [
-            str(i),
+            str(order.id) if order.id is not None else "",
             order.customer,
             order.work_type,
             str(order.pages),

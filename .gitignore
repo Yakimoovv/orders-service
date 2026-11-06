@@ -1,6 +1,7 @@
 .venv/
 __pycache__/
 orders.json
+*.db
 *.tmp
 .mypy_cache/ 
 .pytest_cache/
